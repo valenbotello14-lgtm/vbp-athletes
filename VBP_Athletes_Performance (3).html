@@ -1,0 +1,3072 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VBP — Athletes Performance</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ══ RESET & TOKENS ══════════════════════════════════════════ */
+:root{
+  --o:#FF6B1A;--od:#cc4e00;--oa:rgba(255,107,26,.1);
+  --dk:#08090B;--dk2:#0E1014;--dk3:#14171C;--dk4:#1A1F28;
+  --card:#1C2130;--bdr:#252B38;--bdr2:#1E2433;
+  --w:#FFFFFF;--g0:#F8FAFC;--g1:#E8EDF5;--g2:#A8B4C8;--g3:#5A6478;--g4:#2E3546;
+  --bl:#3B82F6;--gr:#10B981;--pu:#8B5CF6;--re:#EF4444;--ye:#F59E0B;--cy:#06B6D4;
+  --pre:#3B82F6;--in:#10B981;--off:#F59E0B;--post:#8B5CF6;
+  --fd:'Barlow Condensed',sans-serif;--fb:'Inter',sans-serif;
+  --r6:6px;--r8:8px;--r12:12px;--r16:16px;
+  --sh:0 1px 3px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;height:100%}
+body{background:var(--dk);color:var(--w);font-family:var(--fb);font-size:13px;line-height:1.5;min-height:100%;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--dk)}
+::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--o)}
+button,input,select,textarea{font-family:var(--fb)}
+input[type=number]::-webkit-inner-spin-button{opacity:.4}
+
+/* ══ LAYOUT ══════════════════════════════════════════════════ */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;min-width:220px;background:var(--dk2);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;transition:width .25s}
+.sidebar.collapsed{width:60px;min-width:60px}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:52px;background:var(--dk2);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0}
+.content{flex:1;overflow-y:auto;padding:28px 28px 40px}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ══ SIDEBAR ════════════════════════════════════════════════ */
+.sb-logo{padding:16px 16px 12px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.sb-logo-main{font-family:var(--fd);font-size:22px;font-weight:900;color:var(--o);letter-spacing:.5px;white-space:nowrap;overflow:hidden}
+.sb-logo-sub{font-size:9px;font-weight:600;color:var(--g3);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;white-space:nowrap;overflow:hidden}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0}
+.sb-section{font-size:9px;font-weight:700;color:var(--g4);letter-spacing:1.8px;text-transform:uppercase;padding:12px 16px 4px;white-space:nowrap;overflow:hidden}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:background .12s,color .12s;color:var(--g3);border-left:2px solid transparent;white-space:nowrap}
+.sb-item:hover{background:var(--dk3);color:var(--g1)}
+.sb-item.active{background:var(--oa);border-left-color:var(--o);color:var(--o)}
+.sb-icon{font-size:15px;flex-shrink:0;width:20px;text-align:center}
+.sb-label{font-size:12px;font-weight:500;overflow:hidden}
+.sb-bottom{padding:12px 16px;border-top:1px solid var(--bdr);flex-shrink:0}
+
+/* ══ TOPBAR ════════════════════════════════════════════════ */
+.topbar-title{font-family:var(--fd);font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:-.3px}
+.topbar-breadcrumb{font-size:11px;color:var(--g3)}
+.topbar-spacer{flex:1}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+
+/* ══ BUTTONS ════════════════════════════════════════════════ */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:var(--r8);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--o);color:#fff}.btn-primary:hover{background:var(--od)}
+.btn-ghost{background:transparent;color:var(--g2);border:1px solid var(--bdr)}.btn-ghost:hover{border-color:var(--o);color:var(--o)}
+.btn-danger{background:transparent;color:var(--re);border:1px solid rgba(239,68,68,.3)}.btn-danger:hover{background:rgba(239,68,68,.1)}
+.btn-sm{padding:5px 12px;font-size:11px}
+.btn-xs{padding:3px 9px;font-size:10px;border-radius:var(--r6)}
+.btn-icon{padding:7px;border-radius:var(--r8);aspect-ratio:1}
+
+/* ══ CARDS ══════════════════════════════════════════════════ */
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r12);padding:20px}
+.card-sm{padding:14px}
+.card-title{font-size:11px;font-weight:600;color:var(--g3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px}
+
+/* ══ GRID ═══════════════════════════════════════════════════ */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.g-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+
+/* ══ FORM ════════════════════════════════════════════════════ */
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:10px;font-weight:600;color:var(--g3);text-transform:uppercase;letter-spacing:.8px}
+.form-input{background:var(--dk3);border:1px solid var(--bdr);border-radius:var(--r8);padding:8px 11px;color:var(--w);font-size:13px;transition:border-color .15s;width:100%}
+.form-input:focus{outline:none;border-color:var(--o)}
+.form-input::placeholder{color:var(--g4)}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235A6478'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.form-row{display:grid;gap:12px}
+.form-row.c2{grid-template-columns:1fr 1fr}
+.form-row.c3{grid-template-columns:1fr 1fr 1fr}
+.form-row.c4{grid-template-columns:1fr 1fr 1fr 1fr}
+
+/* ══ BADGES ════════════════════════════════════════════════ */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.3px}
+.badge-pre{background:rgba(59,130,246,.15);color:var(--pre)}
+.badge-in{background:rgba(16,185,129,.15);color:var(--in)}
+.badge-off{background:rgba(245,158,11,.15);color:var(--off)}
+.badge-post{background:rgba(139,92,246,.15);color:var(--post)}
+
+/* Sport badges */
+.sport-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+
+/* ══ ATHLETE CARD ════════════════════════════════════════════ */
+.ath-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r12);padding:16px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.ath-card:hover{border-color:var(--o);transform:translateY(-1px);box-shadow:var(--sh)}
+.ath-card-accent{position:absolute;top:0;left:0;right:0;height:3px}
+.ath-card-name{font-family:var(--fd);font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:-.2px;margin-bottom:4px;line-height:1}
+.ath-card-meta{font-size:11px;color:var(--g3);display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.ath-card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr2)}
+.ath-stat-val{font-family:var(--fd);font-size:18px;font-weight:800;line-height:1}
+.ath-stat-lbl{font-size:9px;color:var(--g3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+
+/* ══ TESTING UI ════════════════════════════════════════════ */
+.test-device-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.tdt{padding:8px 16px;border-radius:var(--r8);font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--bdr);color:var(--g3);transition:all .15s;letter-spacing:.3px}
+.tdt.active{border-color:currentColor}
+.tdt[data-dev="forcedecks"].active{color:#FF6B1A;background:rgba(255,107,26,.1)}
+.tdt[data-dev="forceframe"].active{color:#3B82F6;background:rgba(59,130,246,.1)}
+.tdt[data-dev="smartspeed"].active{color:#10B981;background:rgba(16,185,129,.1)}
+.test-type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:20px}
+.ttg-item{background:var(--dk3);border:1px solid var(--bdr);border-radius:var(--r8);padding:12px;cursor:pointer;transition:all .15s;text-align:center}
+.ttg-item:hover{border-color:var(--o)}
+.ttg-item.selected{border-color:var(--o);background:var(--oa)}
+.ttg-icon{font-size:24px;margin-bottom:4px}
+.ttg-label{font-size:11px;font-weight:600;color:var(--g2)}
+
+/* ══ METRIC ROWS ════════════════════════════════════════════ */
+.metric-row{display:grid;grid-template-columns:1fr 120px 80px 80px 100px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bdr2)}
+.metric-row:last-child{border-bottom:none}
+.metric-name-input{background:transparent;border:none;color:var(--w);font-size:13px;font-weight:500;padding:4px 6px;border-radius:var(--r6);transition:background .12s;width:100%}
+.metric-name-input:focus{outline:none;background:var(--dk3)}
+.metric-name-input::placeholder{color:var(--g4)}
+.metric-val-input{background:var(--dk3);border:1px solid var(--bdr);border-radius:var(--r6);padding:6px 8px;color:var(--w);font-size:13px;text-align:center;width:100%}
+.metric-val-input:focus{outline:none;border-color:var(--o)}
+.metric-unit-input{background:var(--dk3);border:1px solid var(--bdr);border-radius:var(--r6);padding:6px 8px;color:var(--g2);font-size:11px;text-align:center;width:100%}
+.metric-unit-input:focus{outline:none;border-color:var(--o)}
+.metric-pct{text-align:center}
+.metric-gauge{width:100%;height:6px;background:var(--dk3);border-radius:3px;overflow:hidden}
+.metric-gauge-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.add-metric-row{display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;color:var(--g3);font-size:12px;transition:color .12s}
+.add-metric-row:hover{color:var(--o)}
+
+/* ══ PERCENTILE PILL ════════════════════════════════════════ */
+.pct{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap}
+.pct-elite{background:rgba(16,185,129,.15);color:#10B981}
+.pct-good{background:rgba(59,130,246,.15);color:#3B82F6}
+.pct-avg{background:rgba(255,107,26,.15);color:#FF6B1A}
+.pct-below{background:rgba(245,158,11,.15);color:#F59E0B}
+.pct-low{background:rgba(239,68,68,.15);color:#EF4444}
+.pct-very-low{background:rgba(220,38,38,.15);color:#DC2626}
+.pct-none{background:var(--dk3);color:var(--g4);font-style:italic}
+
+/* ══ NORMATIVE CONTEXT BAR ══════════════════════════════════ */
+.norm-bar{position:relative;height:24px;background:var(--dk3);border-radius:4px;overflow:visible;margin:4px 0}
+.norm-bar-fill{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,rgba(239,68,68,.3),rgba(245,158,11,.3),rgba(16,185,129,.3));border-radius:4px;width:100%}
+.norm-bar-sections{position:absolute;inset:0;display:flex}
+.norm-bar-section{flex:1;border-right:1px solid rgba(255,255,255,.06)}
+.norm-bar-section:last-child{border-right:none}
+.norm-bar-marker{position:absolute;top:-3px;bottom:-3px;width:3px;border-radius:2px;transform:translateX(-50%);z-index:2}
+.norm-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--g4);margin-top:2px}
+
+/* ══ HISTORY TABLE ══════════════════════════════════════════ */
+.htable{width:100%;border-collapse:collapse}
+.htable th{padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--bdr);background:var(--dk3)}
+.htable td{padding:9px 12px;border-bottom:1px solid var(--bdr2);color:var(--g2);font-size:12px}
+.htable tr:hover td{background:rgba(255,107,26,.03)}
+.htable tr:last-child td{border-bottom:none}
+
+/* ══ CHART CONTAINER ════════════════════════════════════════ */
+.chart-wrap{position:relative;height:220px}
+
+/* ══ CALENDAR SECTION ═══════════════════════════════════════ */
+.cal-event{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--dk3);border-radius:var(--r8);border-left:3px solid;margin-bottom:6px}
+.cal-date{font-family:var(--fd);font-size:22px;font-weight:800;line-height:1;min-width:36px;text-align:center}
+.cal-month{font-size:9px;color:var(--g3);text-transform:uppercase;letter-spacing:.5px}
+
+/* ══ MODAL ══════════════════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r16);padding:28px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px}
+.modal-title{font-family:var(--fd);font-size:26px;font-weight:900;text-transform:uppercase;letter-spacing:-.3px}
+.modal-close{background:var(--dk3);border:1px solid var(--bdr);border-radius:var(--r8);width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--g3);flex-shrink:0;font-size:16px;transition:all .15s}
+.modal-close:hover{border-color:var(--re);color:var(--re)}
+
+/* ══ STATS KPI ══════════════════════════════════════════════ */
+.kpi{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r12);padding:18px 20px;position:relative;overflow:hidden}
+.kpi-top{height:3px;position:absolute;top:0;left:0;right:0}
+.kpi-label{font-size:10px;font-weight:600;color:var(--g3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.kpi-val{font-family:var(--fd);font-size:34px;font-weight:900;line-height:1}
+.kpi-meta{font-size:11px;color:var(--g3);margin-top:4px}
+
+/* ══ EMPTY STATE ════════════════════════════════════════════ */
+.empty{text-align:center;padding:60px 20px;color:var(--g3)}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:.5}
+.empty-title{font-size:16px;font-weight:600;color:var(--g2);margin-bottom:6px}
+.empty-sub{font-size:13px;line-height:1.6}
+
+/* ══ TOGGLE ═════════════════════════════════════════════════ */
+.toggle{display:flex;background:var(--dk3);border-radius:var(--r8);padding:3px;gap:2px}
+.toggle-opt{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:var(--g3);transition:all .15s}
+.toggle-opt.active{background:var(--card);color:var(--w);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+
+/* ══ ALERT ══════════════════════════════════════════════════ */
+.alert{padding:12px 16px;border-radius:var(--r8);border-left:3px solid;font-size:12px;line-height:1.6;margin-bottom:12px}
+.alert-info{background:rgba(59,130,246,.08);border-color:var(--bl);color:var(--g1)}
+.alert-warn{background:rgba(245,158,11,.08);border-color:var(--ye);color:var(--g1)}
+
+/* ══ SECTION HEADER ══════════════════════════════════════════ */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+.sec-title{font-family:var(--fd);font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:-.2px}
+.sec-title .ac{color:var(--o)}
+
+/* ══ ATHLETE PROFILE PAGE ════════════════════════════════════ */
+.ath-hero{background:linear-gradient(135deg,var(--card) 0%,rgba(255,107,26,.06) 100%);border:1px solid var(--bdr);border-radius:var(--r16);padding:24px 28px;margin-bottom:20px;position:relative;overflow:hidden}
+.ath-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,107,26,.08) 0%,transparent 70%);pointer-events:none}
+.ath-hero-name{font-family:var(--fd);font-size:40px;font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:1}
+.ath-hero-name .ac{color:var(--o)}
+
+/* ══ MOMENT INDICATOR ════════════════════════════════════════ */
+.moment-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+
+/* ══ RESPONSIVE ══════════════════════════════════════════════ */
+@media(max-width:900px){
+  .sidebar{width:60px;min-width:60px}
+  .sb-label,.sb-logo-sub,.sb-section{display:none}
+  .sb-logo-main{font-size:14px}
+  .content{padding:16px}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .form-row.c2,.form-row.c3,.form-row.c4{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+<div class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-main">VBP</div>
+    <div class="sb-logo-sub">Athletes Performance</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Principal</div>
+    <div class="sb-item active" onclick="nav('dashboard')">
+      <span class="sb-icon">📊</span><span class="sb-label">Dashboard</span>
+    </div>
+    <div class="sb-item" onclick="nav('athletes')">
+      <span class="sb-icon">👥</span><span class="sb-label">Atletas</span>
+    </div>
+    <div class="sb-section">Testing</div>
+    <div class="sb-item" onclick="nav('new-test')">
+      <span class="sb-icon">➕</span><span class="sb-label">Nuevo Testeo</span>
+    </div>
+    <div class="sb-item" onclick="nav('history')">
+      <span class="sb-icon">📋</span><span class="sb-label">Historial</span>
+    </div>
+    <div class="sb-section">Planificación</div>
+    <div class="sb-item" onclick="nav('calendar')">
+      <span class="sb-icon">📅</span><span class="sb-label">Calendario</span>
+    </div>
+    <div class="sb-section">Sistema</div>
+    <div class="sb-item" onclick="nav('norms')">
+      <span class="sb-icon">📐</span><span class="sb-label">Normativa</span>
+    </div>
+    <div class="sb-item" onclick="nav('library')">
+      <span class="sb-icon">📚</span><span class="sb-label">Biblioteca</span>
+    </div>
+    <div class="sb-item" onclick="nav('prescription')">
+      <span class="sb-icon">🎯</span><span class="sb-label">Prescripción</span>
+    </div>
+    <div class="sb-item" onclick="nav('settings')">
+      <span class="sb-icon">⚙️</span><span class="sb-label">Ajustes</span>
+    </div>
+  </nav>
+  <div class="sb-bottom">
+    <div class="sb-item" onclick="exportData()" style="padding:8px 0">
+      <span class="sb-icon">💾</span><span class="sb-label">Exportar JSON</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN ══════════════════════════════════════════════════ -->
+<div class="main">
+  <div class="topbar">
+    <button class="btn btn-ghost btn-icon" onclick="toggleSidebar()" title="Menú">☰</button>
+    <div>
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="nav('new-test')">+ Nuevo Testeo</button>
+      <button class="btn btn-primary btn-sm" onclick="openAthleteModal()">+ Atleta</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ DASHBOARD ════════════════════════════════════════ -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="g4" style="margin-bottom:20px" id="dash-kpis"></div>
+      <div class="g2">
+        <div>
+          <div class="sec-hd"><div class="sec-title">Próximos <span class="ac">Testeos</span></div></div>
+          <div id="dash-upcoming"></div>
+        </div>
+        <div>
+          <div class="sec-hd"><div class="sec-title">Últimos <span class="ac">Registros</span></div></div>
+          <div id="dash-recent"></div>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <div class="sec-hd"><div class="sec-title">Atletas <span class="ac">Activos</span></div><button class="btn btn-ghost btn-sm" onclick="nav('athletes')">Ver todos</button></div>
+        <div class="g-auto" id="dash-athletes"></div>
+      </div>
+    </div>
+
+    <!-- ══ ATHLETES ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-athletes">
+      <div class="sec-hd">
+        <div class="sec-title">Mis <span class="ac">Atletas</span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="form-input" style="width:200px" placeholder="Buscar…" oninput="filterAthletes(this.value)">
+          <select class="form-input form-select" style="width:160px" onchange="filterAthletesBySport(this.value)">
+            <option value="">Todos los deportes</option>
+            <option value="football">⚽ Fútbol</option>
+            <option value="rugby">🏉 Rugby</option>
+            <option value="basketball">🏀 Básquet</option>
+            <option value="volleyball">🏐 Vóley</option>
+            <option value="boxing">🥊 Boxeo</option>
+            <option value="hockey">🏑 Hockey</option>
+            <option value="handball">🤾 Handball</option>
+            <option value="tennis">🎾 Tenis / Pádel</option>
+            <option value="other">🏃 Otro</option>
+          </select>
+          <button class="btn btn-primary" onclick="openAthleteModal()">+ Atleta</button>
+        </div>
+      </div>
+      <div class="g-auto" id="athletes-grid"></div>
+    </div>
+
+    <!-- ══ ATHLETE PROFILE ═══════════════════════════════════ -->
+    <div class="panel" id="panel-athlete-profile">
+      <button class="btn btn-ghost btn-sm" onclick="nav('athletes')" style="margin-bottom:16px">← Volver</button>
+      <div id="athlete-profile-content"></div>
+    </div>
+
+    <!-- ══ NEW TEST ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-new-test">
+      <div class="sec-hd"><div class="sec-title">Nuevo <span class="ac">Testeo</span></div></div>
+
+      <!-- Step 1: Who + When -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">1 — Atleta y Contexto</div>
+        <div class="form-row c3">
+          <div class="form-group">
+            <label class="form-label">Atleta</label>
+            <select class="form-input form-select" id="test-athlete-select">
+              <option value="">Seleccionar atleta…</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha del Test</label>
+            <input class="form-input" type="date" id="test-date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Momento de Temporada</label>
+            <select class="form-input form-select" id="test-season-moment">
+              <option value="pre">Pre-Season</option>
+              <option value="in">In-Season</option>
+              <option value="off">Off-Season</option>
+              <option value="post">Post-Season</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row c2" style="margin-top:10px">
+          <div class="form-group">
+            <label class="form-label">Próximo Testeo (agendar)</label>
+            <input class="form-input" type="date" id="test-next-date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notas del Testeo</label>
+            <input class="form-input" placeholder="Condición física, contexto…" id="test-notes">
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Device -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">2 — Dispositivo</div>
+        <div class="test-device-tabs">
+          <div class="tdt active" data-dev="forcedecks" onclick="selectDevice(this,'forcedecks')">📊 ForceDecks</div>
+          <div class="tdt" data-dev="forceframe" onclick="selectDevice(this,'forceframe')">💪 ForceFrame</div>
+          <div class="tdt" data-dev="smartspeed" onclick="selectDevice(this,'smartspeed')">⚡ SmartSpeed</div>
+        </div>
+        <div class="card-title" style="margin-bottom:8px">Tipo de Test</div>
+        <div class="test-type-grid" id="test-type-grid"></div>
+      </div>
+
+      <!-- Step 3: Metrics -->
+      <div class="card" id="metrics-card" style="margin-bottom:16px;display:none">
+        <div class="card-title" id="metrics-card-title">3 — Métricas</div>
+        <div class="alert alert-info">
+          Ingresá el nombre de cada métrica, su valor y unidad. Las métricas conocidas (ej: "Altura CMJ", "RSI", "10m") se comparan automáticamente con la normativa del deporte del atleta.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 120px 80px 80px 100px;gap:8px;padding:0 0 6px;margin-bottom:4px">
+          <div style="font-size:9px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.8px">Métrica</div>
+          <div style="font-size:9px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.8px;text-align:center">Valor</div>
+          <div style="font-size:9px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.8px;text-align:center">Unidad</div>
+          <div style="font-size:9px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.8px;text-align:center">Percentil</div>
+          <div style="font-size:9px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.8px;text-align:center">Posición</div>
+        </div>
+        <div id="metrics-rows"></div>
+        <div class="add-metric-row" onclick="addMetricRow()">
+          <span style="font-size:16px">+</span> Agregar métrica
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--bdr2)">
+          <button class="btn btn-ghost" onclick="clearTestForm()">Cancelar</button>
+          <button class="btn btn-primary" onclick="saveTest()">💾 Guardar Testeo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ HISTORY ════════════════════════════════════════════ -->
+    <div class="panel" id="panel-history">
+      <div class="sec-hd">
+        <div class="sec-title">Historial de <span class="ac">Testeos</span></div>
+        <div style="display:flex;gap:8px">
+          <select class="form-input form-select" style="width:180px" id="history-filter-athlete" onchange="renderHistory()">
+            <option value="">Todos los atletas</option>
+          </select>
+          <select class="form-input form-select" style="width:150px" id="history-filter-device" onchange="renderHistory()">
+            <option value="">Todos los dispositivos</option>
+            <option value="forcedecks">ForceDecks</option>
+            <option value="forceframe">ForceFrame</option>
+            <option value="smartspeed">SmartSpeed</option>
+          </select>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="htable" id="history-table">
+          <thead><tr>
+            <th>Atleta</th><th>Fecha</th><th>Dispositivo</th><th>Test</th><th>Momento</th><th>Métricas</th><th>Acciones</th>
+          </tr></thead>
+          <tbody id="history-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ CALENDAR ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-calendar">
+      <div class="sec-hd">
+        <div class="sec-title">Calendario de <span class="ac">Testeos</span></div>
+        <button class="btn btn-primary btn-sm" onclick="syncCalendar()">📅 Conectar Google Calendar</button>
+      </div>
+      <div class="alert alert-info" style="margin-bottom:16px">
+        <strong>Google Calendar:</strong> Conectá tu cuenta para que los testeos agendados se agreguen automáticamente como eventos. Los recordatorios aparecerán en tu calendario con 3 días de anticipación.
+      </div>
+      <div class="g2">
+        <div>
+          <div class="card-title" style="margin-bottom:10px">Próximos Testeos Agendados</div>
+          <div id="cal-upcoming"></div>
+        </div>
+        <div>
+          <div class="card-title" style="margin-bottom:10px">Historial por Mes</div>
+          <div id="cal-history"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ NORMATIVA ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-norms">
+      <div class="sec-hd"><div class="sec-title">Datos <span class="ac">Normativos</span></div></div>
+      <div class="alert alert-info" style="margin-bottom:16px">
+        Referencia: <strong>VALD EPL 2025/26</strong> (>150.000 tests · 19 clubes) para fútbol. Literatura científica para otros deportes. Actualizaciones disponibles cuando VALD publique nuevos reportes.
+      </div>
+      <div id="norms-content"></div>
+    </div>
+
+    <!-- ══ SETTINGS ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-settings">
+      <div class="sec-hd"><div class="sec-title">⚙️ <span class="ac">Ajustes</span></div></div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-title">Coach / Organización</div>
+          <div class="form-row" style="gap:10px">
+            <div class="form-group"><label class="form-label">Nombre del Coach</label><input class="form-input" id="set-coach-name" placeholder="Valen Botello"></div>
+            <div class="form-group"><label class="form-label">Organización</label><input class="form-input" id="set-org" placeholder="VBP Athletic Performance"></div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="set-email" type="email" placeholder="valen@vbp.com"></div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="saveSettings()">Guardar</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Datos & Backup</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-ghost" onclick="exportData()">💾 Exportar todos los datos (JSON)</button>
+            <label class="btn btn-ghost" style="cursor:pointer">📂 Importar datos (JSON)<input type="file" accept=".json" style="display:none" onchange="importData(this)"></label>
+            <button class="btn btn-danger" onclick="clearAllData()">🗑 Borrar todos los datos</button>
+          </div>
+          <div class="alert alert-warn" style="margin-top:12px">
+            El JSON exportado es tu backup — guardalo en tu repositorio GitHub para no perder datos.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PRESCRIPTION ══════════════════════════════════════ -->
+    <div class="panel" id="panel-prescription">
+      <div class="sec-hd">
+        <div class="sec-title">🎯 Prescripción de <span class="ac">Entrenamiento</span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="form-input form-select" style="width:240px" id="presc-athlete-select" onchange="loadPrescription(this.value)">
+            <option value="">Seleccionar atleta…</option>
+          </select>
+        </div>
+      </div>
+      <div id="prescription-content">
+        <div class="empty">
+          <div class="empty-icon">🎯</div>
+          <div class="empty-title">Seleccioná un atleta</div>
+          <div class="empty-sub">Elegí un atleta para ver las recomendaciones de entrenamiento basadas en sus testeos.</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══ LIBRARY ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-library">
+      <div class="sec-hd">
+        <div class="sec-title">📚 Biblioteca de <span class="ac">Referencias</span></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="form-input" style="width:200px" placeholder="Buscar estudio…" oninput="filterLibrary(this.value)" id="lib-search">
+          <select class="form-input form-select" style="width:160px" onchange="filterLibraryBySport(this.value)" id="lib-sport-filter">
+            <option value="">Todos los deportes</option>
+            <option value="football">⚽ Fútbol</option>
+            <option value="rugby">🏉 Rugby</option>
+            <option value="basketball">🏀 Básquet</option>
+            <option value="volleyball">🏐 Vóley</option>
+            <option value="handball">🤾 Handball</option>
+            <option value="boxing">🥊 Boxeo</option>
+            <option value="tennis">🎾 Tenis/Pádel</option>
+            <option value="general">🔬 General</option>
+          </select>
+        </div>
+      </div>
+      <div class="alert alert-info" style="margin-bottom:20px">
+        Todos los estudios y reportes usados como data normativa en VBP Athletes Performance. Clic en <strong>Ver estudio</strong> para abrir el paper original. Los estudios marcados con <span style="color:var(--o);font-weight:700">★ VALD</span> son reportes oficiales de VALD Performance disponibles en VALD Hub.
+      </div>
+      <div id="library-grid"></div>
+    </div>
+
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══ ATHLETE MODAL ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="athlete-modal" style="display:none" onclick="closeAthleteModal(event)">
+<div class="modal" onclick="e=>e.stopPropagation()">
+  <div class="modal-header">
+    <div class="modal-title" id="ath-modal-title">Nuevo Atleta</div>
+    <div class="modal-close" onclick="closeAthleteModal()">✕</div>
+  </div>
+  <div class="form-row c2">
+    <div class="form-group"><label class="form-label">Nombre *</label><input class="form-input" id="ath-first" placeholder="Valentina"></div>
+    <div class="form-group"><label class="form-label">Apellido *</label><input class="form-input" id="ath-last" placeholder="García"></div>
+  </div>
+  <div class="form-row c3" style="margin-top:10px">
+    <div class="form-group"><label class="form-label">Fecha Nacimiento</label><input class="form-input" type="date" id="ath-dob"></div>
+    <div class="form-group"><label class="form-label">Deporte *</label>
+      <select class="form-input form-select" id="ath-sport">
+        <option value="football">⚽ Fútbol</option>
+        <option value="rugby">🏉 Rugby</option>
+        <option value="basketball">🏀 Básquet</option>
+        <option value="volleyball">🏐 Vóley</option>
+        <option value="boxing">🥊 Boxeo</option>
+        <option value="hockey">🏑 Hockey</option>
+        <option value="handball">🤾 Handball</option>
+        <option value="tennis">🎾 Tenis / Pádel</option>
+        <option value="other">🏃 Otro</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Posición / Rol</label><input class="form-input" id="ath-position" placeholder="Mediocampista, Pivot…"></div>
+  </div>
+  <div class="form-row c3" style="margin-top:10px">
+    <div class="form-group"><label class="form-label">Masa Corporal (kg)</label><input class="form-input" type="number" step="0.1" id="ath-bm" placeholder="78.5"></div>
+    <div class="form-group"><label class="form-label">Altura (cm)</label><input class="form-input" type="number" id="ath-height" placeholder="178"></div>
+    <div class="form-group"><label class="form-label">Momento Actual</label>
+      <select class="form-input form-select" id="ath-moment">
+        <option value="pre">Pre-Season</option>
+        <option value="in">In-Season</option>
+        <option value="off">Off-Season</option>
+        <option value="post">Post-Season</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row c2" style="margin-top:10px">
+    <div class="form-group"><label class="form-label">Club / Equipo</label><input class="form-input" id="ath-club" placeholder="Club Atlético…"></div>
+    <div class="form-group"><label class="form-label">Email (para reportes)</label><input class="form-input" type="email" id="ath-email" placeholder="atleta@email.com"></div>
+  </div>
+  <div class="form-group" style="margin-top:10px">
+    <label class="form-label">Notas</label>
+    <input class="form-input" id="ath-notes" placeholder="Historial de lesiones, observaciones…">
+  </div>
+  <input type="hidden" id="ath-edit-id">
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr2)">
+    <button class="btn btn-ghost" onclick="closeAthleteModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveAthlete()">💾 Guardar Atleta</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ TEST DETAIL MODAL ══════════════════════════════════════ -->
+<div class="modal-overlay" id="test-modal" style="display:none" onclick="closeTestModal(event)">
+<div class="modal" style="max-width:820px" onclick="e=>e.stopPropagation()">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title" id="test-modal-title">Detalle del Testeo</div>
+      <div id="test-modal-meta" style="font-size:12px;color:var(--g3);margin-top:2px"></div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="printReport()">🖨 PDF</button>
+      <div class="modal-close" onclick="closeTestModal()">✕</div>
+    </div>
+  </div>
+  <div id="test-modal-body"></div>
+</div>
+</div>
+
+<!-- ══ PRINT AREA ════════════════════════════════════════════ -->
+<div id="print-area" style="display:none"></div>
+
+<script>
+// ══ DATA LAYER ════════════════════════════════════════════════
+const DB = {
+  load(){ return JSON.parse(localStorage.getItem('vbp_db')||'{"athletes":[],"tests":[],"settings":{}}') },
+  save(d){ localStorage.setItem('vbp_db', JSON.stringify(d)) },
+  get(){ return this._d||(this._d=this.load()) },
+  commit(){ this.save(this._d) },
+  nextId(){ this._d.seq=(this._d.seq||0)+1; return 'id_'+this._d.seq }
+};
+
+// ══ SPORT CONFIG ═════════════════════════════════════════════
+const SPORTS = {
+  football:  {label:'Fútbol',     icon:'⚽', color:'#22C55E'},
+  rugby:     {label:'Rugby',      icon:'🏉', color:'#F59E0B'},
+  basketball:{label:'Básquet',    icon:'🏀', color:'#EF4444'},
+  volleyball:{label:'Vóley',     icon:'🏐', color:'#3B82F6'},
+  boxing:    {label:'Boxeo',     icon:'🥊', color:'#8B5CF6'},
+  hockey:    {label:'Hockey',    icon:'🏑', color:'#06B6D4'},
+  handball:  {label:'Handball',   icon:'🤾', color:'#EC4899'},
+  tennis:    {label:'Tenis/Pádel',icon:'🎾', color:'#84CC16'},
+  other:     {label:'Otro',      icon:'🏃', color:'#FF6B1A'},
+};
+const MOMENTS = {
+  pre:  {label:'Pre-Season', color:'#3B82F6', cls:'badge-pre'},
+  in:   {label:'In-Season',  color:'#10B981', cls:'badge-in'},
+  off:  {label:'Off-Season', color:'#F59E0B', cls:'badge-off'},
+  post: {label:'Post-Season',color:'#8B5CF6', cls:'badge-post'},
+};
+const DEVICES = {
+  forcedecks:{label:'ForceDecks', icon:'📊', color:'#FF6B1A',
+    tests:{
+      CMJ:  {label:'Countermovement Jump',icon:'🦘'},
+      SJ:   {label:'Squat Jump',          icon:'⬆️'},
+      DJ:   {label:'Drop Jump',           icon:'⬇️'},
+      SLDJ: {label:'Single Leg Drop Jump',icon:'🦵'},
+      HOP:  {label:'Hop Test',            icon:'🐇'},
+      IMTP: {label:'IMTP',                icon:'🏋️'},
+      NORDIC:{label:'Nordic Hamstring',   icon:'🔧'},
+      SLJ:  {label:'Single Leg Jump',     icon:'🦶'},
+      CUSTOM:{label:'Test Personalizado', icon:'✏️'},
+    }
+  },
+  forceframe:{label:'ForceFrame', icon:'💪', color:'#3B82F6',
+    tests:{
+      HIP_ABDADD:{label:'Hip ABD/ADD',    icon:'🔄'},
+      ANKLE:     {label:'Tobillo FP',     icon:'🦶'},
+      ISO_KNEE:  {label:'Iso Rodilla',    icon:'🦵'},
+      CUSTOM:    {label:'Test Personalizado',icon:'✏️'},
+    }
+  },
+  smartspeed:{label:'SmartSpeed', icon:'⚡', color:'#10B981',
+    tests:{
+      SPRINT:{label:'Sprint Lineal',      icon:'🏃'},
+      COD:   {label:'Cambio de Dirección',icon:'↩️'},
+      CUSTOM:{label:'Test Personalizado', icon:'✏️'},
+    }
+  }
+};
+
+// ══ NORMATIVE DATA ════════════════════════════════════════════
+// Sources:
+// FOOTBALL:    VALD EPL 2025/26 Report (N>150k tests, 19 clubs)
+// RUGBY:       McMahon et al. 2022 (Sensors, N=121 RL professional) +
+//              VALD AFL/NRL 2023 Report (N>3000 CMJ tests)
+// BASKETBALL:  VALD NBA 2020/21 (N>3000, median=46cm) +
+//              Berberet/McMahon 2024 NCAA D1 (N=96, preseason)
+//              Cabarkapa et al. 2023 Frontiers Sports (NBA starters)
+// VOLLEYBALL:  Cabarkapa et al. 2024 Frontiers Sports (European SuperLeague N=19)
+//              Sattler et al. / Pawlik 2023 Sci Reports (Division I men: 45.3±4.9cm)
+//              Sanders 2024 Translational Sports Medicine (D1 women, N=12)
+// HOCKEY:      Literature review team sports / field hockey specific studies
+// HANDBALL:    Radovic/Cabarkapa et al. 2024 Frontiers Sports (professional female)
+//              Krüger et al. literature professional male handball
+// BOXING:      Combat sports literature / kickboxing force plate studies
+// TENNIS:      Gomes et al. / tennis-specific literature ITF/ATP level
+// [p5, p25, p50, p75, p95]
+
+const NORMS = {
+
+  // ─────────────────────────────────────────────────────────────
+  // CMJ — Altura Imp-Mom (cm)
+  // ─────────────────────────────────────────────────────────────
+  'Altura CMJ': {
+    unit:'cm', higher:true,
+    football:   [29.8, 35.6, 39.1, 42.7, 47.4],  // VALD EPL 2025/26
+    rugby:      [27.0, 32.0, 37.0, 41.5, 47.0],  // McMahon 2022 + VALD NRL 2023 (backs: mean≈39cm; fwds: mean≈35cm — pooled)
+    basketball: [32.0, 38.0, 46.0, 52.0, 60.0],  // VALD NBA 2020/21 (league median=46cm/18in, max=66cm/26in)
+    volleyball: [31.0, 37.0, 42.0, 47.0, 53.0],  // Pawlik/Sattler 2023 DI men: 45.3±4.9cm → ±1SD, ±2SD
+    hockey:     [28.0, 33.0, 37.5, 42.0, 47.0],  // Field hockey literature team sports (similar to football)
+    handball:   [30.0, 35.0, 40.0, 45.0, 51.0],  // Radovic/Cabarkapa 2024 + Krüger handball professional male ≈40cm mean
+    boxing:     [26.0, 31.0, 35.5, 40.0, 46.0],  // Combat sports literature (lower BM, good reactive capacity)
+    tennis:     [27.0, 32.0, 36.5, 41.0, 46.5],  // Gomes et al. / tennis-specific elite (ATP/WTA level)
+    other:      [26.0, 31.0, 36.0, 41.0, 47.0],
+  },
+
+  'Altura FT CMJ': {
+    unit:'cm', higher:true,
+    football:   [33.3, 38.9, 42.3, 46.1, 50.8],  // VALD EPL 2025/26
+    rugby:      [30.0, 35.5, 40.0, 44.5, 50.0],
+    basketball: [35.0, 41.0, 48.0, 54.0, 62.0],  // NBA flight time derived (higher due to arm swing)
+    volleyball: [33.0, 39.0, 44.5, 49.5, 55.0],
+    hockey:     [30.0, 35.0, 39.5, 44.0, 49.0],
+    handball:   [32.0, 37.5, 42.5, 47.5, 53.0],
+    boxing:     [28.0, 33.5, 38.0, 43.0, 49.0],
+    tennis:     [29.0, 34.0, 38.5, 43.5, 49.0],
+    other:      [28.0, 33.0, 38.0, 43.0, 49.0],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // FT:CT
+  // ─────────────────────────────────────────────────────────────
+  'FT:CT': {
+    unit:'', higher:true,
+    football:   [0.62, 0.75, 0.82, 0.90, 1.03],  // VALD EPL 2025/26
+    rugby:      [0.56, 0.68, 0.76, 0.84, 0.96],  // VALD NRL 2023 (similar to AFL; AFL slightly higher)
+    basketball: [0.65, 0.78, 0.86, 0.96, 1.08],  // VALD NBA / NBA literature; higher due to longer airtime
+    volleyball: [0.66, 0.80, 0.90, 1.00, 1.13],  // Cabarkapa 2024 SuperLeague women (RSImod-derived)
+    hockey:     [0.60, 0.72, 0.80, 0.88, 0.99],
+    handball:   [0.62, 0.74, 0.83, 0.91, 1.02],
+    boxing:     [0.58, 0.70, 0.78, 0.87, 0.98],
+    tennis:     [0.59, 0.71, 0.79, 0.88, 0.99],
+    other:      [0.58, 0.70, 0.78, 0.87, 0.98],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // RSI-Mod
+  // ─────────────────────────────────────────────────────────────
+  'RSI CMJ': {
+    unit:'', higher:true,
+    football:   [0.38, 0.48, 0.55, 0.62, 0.74],  // VALD EPL 2025/26
+    rugby:      [0.33, 0.42, 0.50, 0.58, 0.70],  // McMahon 2022 (backs mean≈0.53, fwds≈0.44; pooled)
+    basketball: [0.40, 0.52, 0.62, 0.72, 0.87],  // VALD NBA 2020-21 (max=1.13; Berberet 2024 NCAA guards>fwds)
+    volleyball: [0.42, 0.54, 0.64, 0.74, 0.90],  // Cabarkapa 2024 (starters showed higher RSImod than non-starters)
+    hockey:     [0.36, 0.46, 0.54, 0.62, 0.74],
+    handball:   [0.38, 0.48, 0.56, 0.64, 0.76],
+    boxing:     [0.34, 0.44, 0.52, 0.60, 0.72],
+    tennis:     [0.35, 0.45, 0.53, 0.61, 0.73],
+    other:      [0.34, 0.44, 0.52, 0.60, 0.72],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Potencia Pico Excéntrica / MC
+  // ─────────────────────────────────────────────────────────────
+  'Pot. Pico Exc.': {
+    unit:'W/kg', higher:true,
+    football:   [13.0, 18.9, 22.4, 26.0, 33.3],  // VALD EPL 2025/26 (+37% vs professional cohort)
+    rugby:      [10.5, 15.5, 19.5, 23.5, 30.0],
+    basketball: [12.0, 17.5, 21.5, 25.5, 32.5],  // NBA literature (similar to EPL per VALD data)
+    volleyball: [12.5, 18.0, 22.0, 26.5, 33.5],  // Higher eccentric demand due to jump volume
+    hockey:     [10.0, 15.0, 19.0, 23.0, 29.5],
+    handball:   [11.0, 16.0, 20.0, 24.0, 31.0],
+    boxing:     [9.5,  14.5, 18.5, 22.5, 28.5],
+    tennis:     [10.0, 15.0, 19.0, 23.0, 29.5],
+    other:      [9.5,  14.5, 18.5, 22.5, 28.5],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Potencia Pico CMJ / MC
+  // ─────────────────────────────────────────────────────────────
+  'Pot. Pico CMJ': {
+    unit:'W/kg', higher:true,
+    football:   [44.8, 51.8, 56.0, 60.5, 66.3],  // VALD EPL 2025/26
+    rugby:      [42.0, 49.0, 54.0, 59.5, 66.0],  // VALD NRL 2023 (rel. conc. peak power ~similar to AFL ≈51-54 W/kg)
+    basketball: [44.0, 52.0, 58.0, 64.0, 72.0],  // VALD NBA 2020-21 (East=66 W/kg, West=64 W/kg median)
+    volleyball: [44.0, 52.5, 58.5, 65.0, 73.0],  // Sanders 2024 DI volleyball; Middle blockers highest propulsion
+    hockey:     [42.0, 49.0, 54.0, 59.0, 65.5],
+    handball:   [43.0, 50.0, 55.5, 61.0, 67.5],
+    boxing:     [40.0, 47.0, 52.5, 58.0, 64.5],
+    tennis:     [41.0, 48.0, 53.5, 59.0, 65.5],
+    other:      [40.0, 47.0, 52.0, 57.5, 64.0],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Impulso Concéntrico 100ms
+  // ─────────────────────────────────────────────────────────────
+  'Impulso Conc. 100ms': {
+    unit:'Ns', higher:true,
+    football:   [70, 95, 111, 129, 161],  // VALD EPL 2025/26 (mayor diferenciador: +57% vs profesionales)
+    rugby:      [62, 84, 100, 118, 148],
+    basketball: [68, 92, 108, 126, 158],
+    volleyball: [65, 88, 104, 122, 153],
+    hockey:     [60, 82, 98, 116, 146],
+    handball:   [63, 86, 102, 120, 151],
+    boxing:     [55, 76, 92, 110, 139],
+    tennis:     [57, 78, 94, 112, 142],
+    other:      [55, 76, 91, 108, 137],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Impulso Concéntrico Total
+  // ─────────────────────────────────────────────────────────────
+  'Impulso Concéntrico': {
+    unit:'Ns', higher:true,
+    football:   [177, 202, 221, 241, 271],  // VALD EPL 2025/26
+    rugby:      [185, 215, 238, 262, 298],  // Heavier athletes → higher absolute impulse
+    basketball: [175, 205, 228, 252, 286],
+    volleyball: [165, 192, 214, 238, 272],
+    hockey:     [168, 195, 217, 240, 273],
+    handball:   [175, 204, 226, 250, 284],
+    boxing:     [150, 176, 197, 220, 252],
+    tennis:     [155, 180, 201, 224, 256],
+    other:      [150, 176, 197, 220, 252],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Impulso Deceleración Excéntrica
+  // ─────────────────────────────────────────────────────────────
+  'Impulso Dec. Exc.': {
+    unit:'Ns', higher:true,
+    football:   [77, 100, 115, 130, 154],  // VALD EPL 2025/26 (+35% vs profesionales)
+    rugby:      [82, 107, 124, 140, 167],  // Higher mass → higher absolute impulse
+    basketball: [75, 98, 113, 128, 152],
+    volleyball: [72, 94, 109, 124, 148],
+    hockey:     [70, 91, 106, 121, 145],
+    handball:   [74, 96, 111, 126, 150],
+    boxing:     [62, 82, 96, 110, 133],
+    tennis:     [64, 84, 98, 112, 135],
+    other:      [62, 82, 96, 110, 133],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Velocidad Pico Excéntrica
+  // ─────────────────────────────────────────────────────────────
+  'Vel. Pico Exc. CMJ': {
+    unit:'m/s', higher:false, note:'Más negativo = mayor velocidad',
+    football:   [-1.08, -1.30, -1.44, -1.58, -1.77],  // VALD EPL 2025/26
+    rugby:      [-0.98, -1.18, -1.32, -1.46, -1.64],
+    basketball: [-1.05, -1.26, -1.40, -1.54, -1.72],
+    volleyball: [-1.10, -1.32, -1.47, -1.62, -1.81],  // High jump volume → developed eccentric velocity
+    hockey:     [-1.00, -1.20, -1.34, -1.48, -1.66],
+    handball:   [-1.02, -1.22, -1.36, -1.50, -1.68],
+    boxing:     [-0.95, -1.14, -1.28, -1.42, -1.59],
+    tennis:     [-0.96, -1.16, -1.30, -1.44, -1.61],
+    other:      [-0.95, -1.14, -1.28, -1.42, -1.59],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Profundidad CM
+  // ─────────────────────────────────────────────────────────────
+  'Profundidad CM': {
+    unit:'cm', higher:false, note:'Más negativo = mayor profundidad',
+    football:   [-21.7, -28.7, -32.8, -37.4, -45.0],  // VALD EPL 2025/26
+    rugby:      [-22.0, -29.0, -33.5, -38.0, -45.5],
+    basketball: [-20.0, -27.0, -31.5, -36.5, -44.0],  // NBA literature (similar EPL range)
+    volleyball: [-22.0, -29.5, -34.0, -39.0, -47.0],  // Sanders 2024 (middle blockers: -41.7±6.4cm deepest)
+    hockey:     [-21.0, -28.0, -32.5, -37.0, -44.5],
+    handball:   [-21.5, -28.5, -33.0, -37.5, -45.0],
+    boxing:     [-20.0, -27.0, -31.0, -35.5, -42.5],
+    tennis:     [-20.5, -27.5, -31.5, -36.0, -43.0],
+    other:      [-20.0, -27.0, -31.0, -35.5, -42.5],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // F. en Velocidad Cero / MC
+  // ─────────────────────────────────────────────────────────────
+  'F. Vel. Cero': {
+    unit:'N/kg', higher:true,
+    football:   [19.5, 22.9, 24.9, 27.1, 30.7],  // VALD EPL 2025/26
+    rugby:      [20.0, 23.5, 25.5, 27.8, 31.5],
+    basketball: [19.0, 22.5, 24.5, 26.8, 30.5],
+    volleyball: [19.5, 23.0, 25.0, 27.3, 31.0],
+    hockey:     [18.5, 22.0, 24.0, 26.3, 29.8],
+    handball:   [19.0, 22.5, 24.5, 26.8, 30.3],
+    boxing:     [18.0, 21.5, 23.5, 25.8, 29.3],
+    tennis:     [18.5, 22.0, 24.0, 26.3, 29.8],
+    other:      [18.0, 21.5, 23.5, 25.8, 29.3],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Duración Excéntrica
+  // ─────────────────────────────────────────────────────────────
+  'Duración Exc.': {
+    unit:'s', higher:false,
+    football:   [0.58, 0.50, 0.46, 0.42, 0.36],  // VALD EPL 2025/26
+    rugby:      [0.60, 0.52, 0.47, 0.43, 0.37],
+    basketball: [0.57, 0.49, 0.45, 0.41, 0.35],
+    volleyball: [0.58, 0.50, 0.46, 0.42, 0.36],
+    hockey:     [0.59, 0.51, 0.47, 0.43, 0.37],
+    handball:   [0.59, 0.51, 0.46, 0.42, 0.36],
+    boxing:     [0.60, 0.52, 0.48, 0.44, 0.38],
+    tennis:     [0.60, 0.52, 0.47, 0.43, 0.37],
+    other:      [0.60, 0.52, 0.48, 0.44, 0.38],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // RFD Dec. Exc. / MC
+  // ─────────────────────────────────────────────────────────────
+  'RFD Dec. Exc.': {
+    unit:'N/s/kg', higher:true,
+    football:   [74, 72, 97, 124, 169],  // VALD EPL 2025/26 (+45% vs profesionales)
+    rugby:      [60, 75, 95, 118, 158],
+    basketball: [68, 80, 98, 122, 162],
+    volleyball: [65, 78, 96, 120, 160],
+    hockey:     [58, 72, 90, 113, 152],
+    handball:   [62, 76, 94, 117, 157],
+    boxing:     [55, 68, 86, 108, 145],
+    tennis:     [56, 70, 88, 110, 148],
+    other:      [55, 68, 86, 108, 145],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Pot. Media Exc. / MC
+  // ─────────────────────────────────────────────────────────────
+  'Pot. Media Exc.': {
+    unit:'W/kg', higher:true,
+    football:   [5.1, 6.3, 6.9, 7.7, 8.9],  // VALD EPL 2025/26
+    rugby:      [4.6, 5.8, 6.4, 7.2, 8.4],
+    basketball: [5.0, 6.2, 6.8, 7.6, 8.8],
+    volleyball: [5.2, 6.5, 7.1, 7.9, 9.2],
+    hockey:     [4.8, 6.0, 6.6, 7.4, 8.6],
+    handball:   [4.9, 6.1, 6.7, 7.5, 8.7],
+    boxing:     [4.5, 5.7, 6.3, 7.1, 8.3],
+    tennis:     [4.6, 5.8, 6.4, 7.2, 8.4],
+    other:      [4.5, 5.7, 6.3, 7.1, 8.3],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Duración Concéntrica
+  // ─────────────────────────────────────────────────────────────
+  'Duración Conc.': {
+    unit:'s', higher:false,
+    football:   [0.31, 0.28, 0.25, 0.23, 0.18],  // VALD EPL 2025/26
+    rugby:      [0.33, 0.30, 0.27, 0.24, 0.19],
+    basketball: [0.30, 0.27, 0.24, 0.22, 0.17],
+    volleyball: [0.30, 0.27, 0.24, 0.22, 0.17],
+    hockey:     [0.32, 0.29, 0.26, 0.23, 0.18],
+    handball:   [0.32, 0.29, 0.26, 0.23, 0.18],
+    boxing:     [0.33, 0.30, 0.27, 0.24, 0.19],
+    tennis:     [0.33, 0.30, 0.27, 0.24, 0.19],
+    other:      [0.33, 0.30, 0.27, 0.24, 0.19],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // SJ
+  // ─────────────────────────────────────────────────────────────
+  'Altura SJ': {
+    unit:'cm', higher:true,
+    football:   [27.9, 33.3, 36.6, 40.1, 46.6],  // VALD EPL 2025/26
+    rugby:      [25.0, 30.5, 34.5, 38.5, 45.0],
+    basketball: [28.0, 34.0, 38.5, 43.5, 51.0],  // Berberet/McMahon 2024 NCAA D1 (guards>fwds; similar EUR ≈1.06)
+    volleyball: [29.0, 35.0, 40.0, 45.0, 52.0],  // Pawlik 2023 DI men SJ 40.8±5.6cm; women slightly lower
+    hockey:     [25.5, 31.0, 35.0, 39.5, 46.0],
+    handball:   [27.0, 32.5, 37.0, 41.5, 48.5],
+    boxing:     [23.5, 29.0, 33.0, 37.5, 44.5],
+    tennis:     [24.5, 30.0, 34.0, 38.5, 45.5],
+    other:      [23.5, 29.0, 33.0, 37.5, 44.5],
+  },
+
+  'RSI SJ': {
+    unit:'', higher:true,
+    football:   [0.52, 0.73, 0.87, 1.07, 1.31],  // VALD EPL 2025/26
+    rugby:      [0.46, 0.65, 0.79, 0.98, 1.22],
+    basketball: [0.54, 0.76, 0.91, 1.12, 1.38],
+    volleyball: [0.55, 0.78, 0.93, 1.15, 1.42],
+    hockey:     [0.48, 0.68, 0.82, 1.01, 1.25],
+    handball:   [0.50, 0.70, 0.85, 1.05, 1.30],
+    boxing:     [0.44, 0.63, 0.77, 0.95, 1.19],
+    tennis:     [0.45, 0.64, 0.78, 0.97, 1.21],
+    other:      [0.44, 0.63, 0.77, 0.95, 1.19],
+  },
+
+  'Pot. Pico SJ': {
+    unit:'W/kg', higher:true,
+    football:   [43.5, 50.5, 55.6, 59.4, 65.6],  // VALD EPL 2025/26
+    rugby:      [42.0, 49.0, 54.0, 58.5, 64.5],
+    basketball: [43.0, 51.0, 56.5, 61.5, 68.0],
+    volleyball: [43.5, 51.5, 57.0, 62.0, 68.5],
+    hockey:     [41.5, 48.5, 53.5, 58.0, 64.0],
+    handball:   [42.5, 49.5, 54.5, 59.0, 65.0],
+    boxing:     [40.0, 47.0, 52.0, 57.0, 63.5],
+    tennis:     [40.5, 47.5, 52.5, 57.5, 64.0],
+    other:      [40.0, 47.0, 52.0, 57.0, 63.5],
+  },
+
+  'Contracción SJ': {
+    unit:'s', higher:false,
+    football:   [0.72, 0.54, 0.45, 0.37, 0.30],
+    rugby:      [0.75, 0.57, 0.48, 0.40, 0.32],
+    basketball: [0.70, 0.52, 0.43, 0.35, 0.28],
+    volleyball: [0.70, 0.52, 0.43, 0.35, 0.28],
+    hockey:     [0.73, 0.55, 0.46, 0.38, 0.30],
+    handball:   [0.73, 0.55, 0.46, 0.38, 0.31],
+    boxing:     [0.75, 0.57, 0.48, 0.40, 0.32],
+    tennis:     [0.74, 0.56, 0.47, 0.39, 0.31],
+    other:      [0.75, 0.57, 0.48, 0.40, 0.32],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // DROP JUMP
+  // ─────────────────────────────────────────────────────────────
+  'Altura DJ': {
+    unit:'cm', higher:true,
+    football:   [26.2, 33.2, 37.1, 40.1, 44.0],  // VALD EPL 2025/26
+    rugby:      [24.0, 30.5, 34.5, 37.8, 42.0],  // VALD NRL 2023 (NRL slightly higher RSI than AFL)
+    basketball: [25.0, 32.0, 36.5, 40.0, 44.5],
+    volleyball: [26.0, 33.0, 37.5, 41.0, 45.5],  // High jump volume sport → better reactive
+    hockey:     [24.5, 31.0, 35.0, 38.5, 43.0],
+    handball:   [25.0, 31.5, 35.5, 39.0, 43.5],
+    boxing:     [22.0, 28.5, 32.5, 36.0, 40.5],
+    tennis:     [23.0, 29.5, 33.5, 37.0, 41.5],
+    other:      [22.0, 28.5, 32.5, 36.0, 40.5],
+  },
+
+  'RSI DJ': {
+    unit:'', higher:true,
+    football:   [1.88, 2.49, 2.77, 3.16, 3.75],  // VALD EPL 2025/26
+    rugby:      [1.72, 2.28, 2.60, 2.98, 3.56],  // VALD NRL 2023 (NRL RSI DJ higher trend vs AFL)
+    basketball: [1.80, 2.40, 2.72, 3.12, 3.72],
+    volleyball: [1.85, 2.46, 2.80, 3.20, 3.82],  // High reactive demand from game jump profile
+    hockey:     [1.75, 2.33, 2.65, 3.04, 3.63],
+    handball:   [1.78, 2.37, 2.69, 3.08, 3.68],
+    boxing:     [1.60, 2.18, 2.50, 2.88, 3.46],
+    tennis:     [1.62, 2.20, 2.52, 2.90, 3.48],
+    other:      [1.60, 2.18, 2.50, 2.88, 3.46],
+  },
+
+  'Contacto DJ': {
+    unit:'s', higher:false,
+    football:   [0.25, 0.21, 0.19, 0.17, 0.15],  // VALD EPL 2025/26 (−45% CM depth vs profesionales → stiffness)
+    rugby:      [0.27, 0.23, 0.20, 0.18, 0.16],
+    basketball: [0.26, 0.22, 0.19, 0.17, 0.15],
+    volleyball: [0.25, 0.21, 0.19, 0.17, 0.15],
+    hockey:     [0.27, 0.23, 0.20, 0.18, 0.16],
+    handball:   [0.26, 0.22, 0.20, 0.18, 0.16],
+    boxing:     [0.28, 0.24, 0.21, 0.19, 0.17],
+    tennis:     [0.27, 0.23, 0.21, 0.19, 0.16],
+    other:      [0.28, 0.24, 0.21, 0.19, 0.17],
+  },
+
+  'Profundidad CM DJ': {
+    unit:'cm', higher:false, note:'Más negativo = mayor profundidad. EPL: muy bajo → alta stiffness.',
+    football:   [-7.4, -9.6, -11.5, -13.9, -18.1],  // VALD EPL 2025/26 (−45% vs other professionals)
+    rugby:      [-8.0,-10.5,-12.5,-15.0,-19.5],
+    basketball: [-7.8,-10.0,-12.0,-14.5,-18.8],
+    volleyball: [-7.5, -9.8,-11.8,-14.2,-18.5],
+    hockey:     [-8.2,-10.7,-12.7,-15.3,-19.8],
+    handball:   [-8.0,-10.5,-12.5,-15.0,-19.5],
+    boxing:     [-9.0,-11.5,-13.5,-16.0,-20.5],
+    tennis:     [-8.5,-11.0,-13.0,-15.5,-20.0],
+    other:      [-9.0,-11.5,-13.5,-16.0,-20.5],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // SLDJ
+  // ─────────────────────────────────────────────────────────────
+  'Altura SLDJ': {
+    unit:'cm', higher:true,
+    football:   [15.3, 20.0, 22.4, 25.4, 30.3],  // VALD EPL 2025/26 (+17% vs profesionales)
+    rugby:      [13.5, 18.0, 20.5, 23.5, 28.5],
+    basketball: [14.5, 19.5, 22.0, 25.0, 30.0],
+    volleyball: [15.0, 20.0, 22.5, 25.5, 30.5],
+    hockey:     [13.5, 18.0, 20.5, 23.5, 28.5],
+    handball:   [14.0, 18.5, 21.0, 24.0, 29.0],
+    boxing:     [12.5, 17.0, 19.5, 22.5, 27.5],
+    tennis:     [13.0, 17.5, 20.0, 23.0, 28.0],
+    other:      [12.5, 17.0, 19.5, 22.5, 27.5],
+  },
+
+  'RSI SLDJ': {
+    unit:'', higher:true,
+    football:   [1.01, 1.38, 1.56, 1.72, 1.97],  // VALD EPL 2025/26
+    rugby:      [0.90, 1.24, 1.42, 1.58, 1.82],
+    basketball: [0.96, 1.32, 1.50, 1.66, 1.92],
+    volleyball: [1.00, 1.36, 1.54, 1.70, 1.96],
+    hockey:     [0.92, 1.26, 1.44, 1.60, 1.85],
+    handball:   [0.95, 1.30, 1.48, 1.64, 1.89],
+    boxing:     [0.86, 1.20, 1.38, 1.54, 1.78],
+    tennis:     [0.88, 1.22, 1.40, 1.56, 1.80],
+    other:      [0.86, 1.20, 1.38, 1.54, 1.78],
+  },
+
+  'Contacto SLDJ': {
+    unit:'s', higher:false,
+    football:   [0.35, 0.30, 0.27, 0.24, 0.22],  // VALD EPL 2025/26 (−21% vs other professionals)
+    rugby:      [0.38, 0.33, 0.29, 0.26, 0.23],
+    basketball: [0.36, 0.31, 0.28, 0.25, 0.22],
+    volleyball: [0.35, 0.30, 0.27, 0.24, 0.22],
+    hockey:     [0.38, 0.33, 0.29, 0.26, 0.23],
+    handball:   [0.37, 0.32, 0.28, 0.25, 0.23],
+    boxing:     [0.40, 0.35, 0.31, 0.28, 0.25],
+    tennis:     [0.39, 0.34, 0.30, 0.27, 0.24],
+    other:      [0.40, 0.35, 0.31, 0.28, 0.25],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // HOP TEST
+  // ─────────────────────────────────────────────────────────────
+  'Altura Hop': {
+    unit:'cm', higher:true,
+    football:   [14.9, 21.6, 26.7, 31.8, 37.6],  // VALD EPL 2025/26
+    rugby:      [13.5, 19.5, 24.5, 29.5, 35.5],
+    basketball: [14.0, 20.5, 25.5, 30.5, 36.5],
+    volleyball: [14.5, 21.0, 26.0, 31.0, 37.0],
+    hockey:     [13.5, 19.5, 24.0, 29.0, 35.0],
+    handball:   [14.0, 20.0, 25.0, 30.0, 36.0],
+    boxing:     [12.0, 18.0, 23.0, 28.0, 34.0],
+    tennis:     [12.5, 18.5, 23.5, 28.5, 34.5],
+    other:      [12.0, 18.0, 23.0, 28.0, 34.0],
+  },
+
+  'RSI Hop': {
+    unit:'', higher:true,
+    football:   [1.97, 2.43, 2.74, 3.08, 3.55],  // VALD EPL 2025/26
+    rugby:      [1.80, 2.24, 2.54, 2.88, 3.35],
+    basketball: [1.88, 2.34, 2.64, 2.98, 3.45],
+    volleyball: [1.92, 2.38, 2.69, 3.04, 3.51],
+    hockey:     [1.82, 2.27, 2.57, 2.91, 3.38],
+    handball:   [1.85, 2.30, 2.61, 2.95, 3.42],
+    boxing:     [1.70, 2.14, 2.44, 2.78, 3.25],
+    tennis:     [1.72, 2.16, 2.46, 2.80, 3.27],
+    other:      [1.70, 2.14, 2.44, 2.78, 3.25],
+  },
+
+  'Contacto Hop': {
+    unit:'s', higher:false,
+    football:   [0.20, 0.18, 0.17, 0.16, 0.14],  // VALD EPL 2025/26
+    rugby:      [0.22, 0.20, 0.18, 0.16, 0.15],
+    basketball: [0.21, 0.19, 0.17, 0.16, 0.14],
+    volleyball: [0.21, 0.19, 0.17, 0.15, 0.14],
+    hockey:     [0.22, 0.20, 0.18, 0.16, 0.15],
+    handball:   [0.22, 0.19, 0.18, 0.16, 0.14],
+    boxing:     [0.23, 0.21, 0.19, 0.17, 0.15],
+    tennis:     [0.22, 0.20, 0.18, 0.16, 0.15],
+    other:      [0.23, 0.21, 0.19, 0.17, 0.15],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // IMTP
+  // ─────────────────────────────────────────────────────────────
+  'F. Pico IMTP': {
+    unit:'N', higher:true,
+    football:   [1870, 2235, 2531, 2891, 3695],  // VALD EPL 2025/26
+    rugby:      [2100, 2500, 2850, 3250, 3950],  // Higher absolute force due to higher BM (≈102kg fwds / 90kg backs)
+    basketball: [1900, 2280, 2600, 2980, 3680],  // VALD NBA / NFL-NCAA Report (NFL similar profile)
+    volleyball: [1750, 2100, 2400, 2760, 3400],
+    hockey:     [1800, 2150, 2450, 2810, 3480],
+    handball:   [1850, 2200, 2500, 2870, 3550],
+    boxing:     [1600, 1950, 2240, 2600, 3250],  // Lower BM weight categories → lower absolute force
+    tennis:     [1650, 2000, 2290, 2650, 3300],
+    other:      [1600, 1950, 2240, 2600, 3250],
+  },
+
+  'F. Pico IMTP / MC': {
+    unit:'N/kg', higher:true,
+    football:   [23.0, 28.6, 33.1, 36.5, 42.8],  // VALD EPL 2025/26
+    rugby:      [22.0, 27.0, 31.0, 34.5, 41.0],  // Heavier → relatively lower normalized (fwds ≈102kg)
+    basketball: [22.0, 27.5, 31.5, 35.0, 42.0],
+    volleyball: [22.5, 28.0, 32.0, 35.5, 42.5],
+    hockey:     [22.0, 27.5, 31.5, 35.0, 41.5],
+    handball:   [22.0, 27.5, 31.5, 35.0, 42.0],
+    boxing:     [24.0, 29.5, 33.5, 37.0, 43.5],  // Lower BM → better relative force
+    tennis:     [23.5, 29.0, 33.0, 36.5, 43.0],
+    other:      [22.0, 27.5, 31.5, 35.0, 41.5],
+  },
+
+  'F@100ms IMTP': {
+    unit:'N', higher:true,
+    football:   [776, 1007, 1215, 1371, 1845],  // VALD EPL 2025/26
+    rugby:      [850, 1100, 1320, 1490, 1990],
+    basketball: [800, 1040, 1250, 1410, 1890],
+    volleyball: [750, 980, 1180, 1340, 1800],
+    hockey:     [760, 990, 1190, 1350, 1810],
+    handball:   [770, 1000, 1200, 1360, 1820],
+    boxing:     [680, 890, 1080, 1230, 1660],
+    tennis:     [700, 910, 1100, 1250, 1680],
+    other:      [680, 890, 1080, 1230, 1660],
+  },
+
+  'F@100ms IMTP / MC': {
+    unit:'N/kg', higher:true,
+    football:   [10.5, 13.3, 14.9, 17.5, 23.2],  // VALD EPL 2025/26
+    rugby:      [9.5, 12.0, 13.8, 16.2, 21.5],
+    basketball: [10.0, 12.8, 14.5, 17.0, 22.5],
+    volleyball: [10.2, 13.0, 14.7, 17.3, 22.8],
+    hockey:     [9.8, 12.5, 14.2, 16.8, 22.2],
+    handball:   [10.0, 12.7, 14.4, 17.0, 22.5],
+    boxing:     [11.0, 13.8, 15.5, 18.0, 23.5],
+    tennis:     [10.8, 13.5, 15.2, 17.8, 23.2],
+    other:      [9.8, 12.5, 14.2, 16.8, 22.2],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // NORDIC HAMSTRING
+  // ─────────────────────────────────────────────────────────────
+  'F. Nórdico': {
+    unit:'N', higher:true,
+    football:   [339, 407, 451, 503, 586],  // VALD EPL 2025/26
+    rugby:      [355, 425, 472, 527, 615],  // Higher BM rugby → slightly higher absolute
+    basketball: [330, 396, 440, 492, 574],
+    volleyball: [325, 390, 433, 484, 565],
+    hockey:     [335, 400, 445, 497, 580],
+    handball:   [345, 413, 458, 512, 597],
+    boxing:     [305, 368, 410, 460, 540],
+    tennis:     [315, 378, 420, 470, 550],
+    other:      [305, 368, 410, 460, 540],
+  },
+
+  'Torque Nórdico': {
+    unit:'Nm', higher:true,
+    football:   [130, 165, 189, 220, 254],  // VALD EPL 2025/26
+    rugby:      [138, 174, 200, 232, 268],
+    basketball: [126, 160, 184, 214, 248],
+    volleyball: [122, 155, 178, 207, 240],
+    hockey:     [128, 162, 186, 216, 250],
+    handball:   [132, 167, 192, 223, 258],
+    boxing:     [115, 148, 171, 200, 233],
+    tennis:     [118, 151, 174, 203, 236],
+    other:      [115, 148, 171, 200, 233],
+  },
+
+  'Asimetría Nórdico': {
+    unit:'%', higher:false, note:'Menor = más simétrico. >10% → riesgo aumentado de lesión hamstring',
+    football:   [18, 12, 7, 3, 1],  // VALD EPL 2025/26
+    rugby:      [18, 12, 7, 3, 1],
+    basketball: [18, 12, 7, 3, 1],
+    volleyball: [17, 11, 6, 3, 1],
+    hockey:     [18, 12, 7, 3, 1],
+    handball:   [18, 12, 7, 3, 1],
+    boxing:     [16, 10, 6, 2, 0],
+    tennis:     [16, 10, 6, 2, 0],
+    other:      [18, 12, 7, 3, 1],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // FORCEFRAME — HIP ABD/ADD
+  // ─────────────────────────────────────────────────────────────
+  'ABD 45°': {
+    unit:'N', higher:true,
+    football:   [233, 374, 421, 485, 570],  // VALD EPL 2025/26
+    rugby:      [260, 410, 462, 532, 625],  // Higher BM
+    basketball: [228, 366, 413, 476, 560],
+    volleyball: [222, 357, 402, 464, 547],
+    hockey:     [230, 369, 416, 479, 564],
+    handball:   [242, 384, 433, 499, 587],
+    boxing:     [210, 340, 385, 445, 525],
+    tennis:     [215, 346, 390, 450, 531],
+    other:      [210, 340, 385, 445, 525],
+  },
+
+  'ADD 45°': {
+    unit:'N', higher:true,
+    football:   [237, 360, 450, 510, 590],  // VALD EPL 2025/26
+    rugby:      [262, 396, 495, 561, 649],
+    basketball: [232, 352, 440, 499, 578],
+    volleyball: [226, 343, 429, 487, 564],
+    hockey:     [234, 355, 444, 503, 583],
+    handball:   [246, 371, 464, 526, 610],
+    boxing:     [215, 328, 411, 466, 541],
+    tennis:     [220, 334, 418, 474, 549],
+    other:      [215, 328, 411, 466, 541],
+  },
+
+  'ADD:ABD 45°': {
+    unit:'', higher:null, note:'Ratio equilibrio ADD:ABD. ~1.0 = equilibrio. >1.0 = ADD dominante',
+    football:   [0.74, 0.94, 1.06, 1.19, 1.35],  // VALD EPL 2025/26
+    rugby:      [0.73, 0.92, 1.05, 1.18, 1.34],
+    basketball: [0.74, 0.94, 1.06, 1.19, 1.35],
+    volleyball: [0.73, 0.93, 1.05, 1.18, 1.34],
+    hockey:     [0.73, 0.93, 1.05, 1.18, 1.34],
+    handball:   [0.74, 0.94, 1.06, 1.19, 1.35],
+    boxing:     [0.72, 0.91, 1.03, 1.16, 1.32],
+    tennis:     [0.73, 0.92, 1.04, 1.17, 1.33],
+    other:      [0.73, 0.92, 1.04, 1.17, 1.33],
+  },
+
+  'ABD 60°': {
+    unit:'N', higher:true,
+    football:   [288, 384, 431, 483, 569],  // VALD EPL 2025/26
+    rugby:      [317, 422, 474, 531, 626],
+    basketball: [282, 376, 422, 473, 558],
+    volleyball: [275, 367, 413, 463, 547],
+    hockey:     [284, 379, 426, 478, 564],
+    handball:   [298, 396, 445, 499, 589],
+    boxing:     [260, 350, 395, 444, 524],
+    tennis:     [265, 356, 401, 450, 531],
+    other:      [260, 350, 395, 444, 524],
+  },
+
+  'ADD 60°': {
+    unit:'N', higher:true,
+    football:   [274, 380, 443, 507, 583],  // VALD EPL 2025/26
+    rugby:      [301, 418, 487, 558, 641],
+    basketball: [268, 372, 434, 497, 571],
+    volleyball: [261, 362, 422, 483, 555],
+    hockey:     [270, 375, 437, 500, 575],
+    handball:   [284, 393, 458, 524, 603],
+    boxing:     [247, 344, 402, 461, 530],
+    tennis:     [252, 350, 408, 468, 538],
+    other:      [247, 344, 402, 461, 530],
+  },
+
+  'ADD:ABD 60°': {
+    unit:'', higher:null, note:'Ratio equilibrio ADD:ABD en 60°',
+    football:   [0.74, 0.91, 1.04, 1.18, 1.31],  // VALD EPL 2025/26
+    rugby:      [0.73, 0.90, 1.03, 1.17, 1.30],
+    basketball: [0.74, 0.91, 1.04, 1.18, 1.31],
+    volleyball: [0.73, 0.90, 1.03, 1.17, 1.30],
+    hockey:     [0.73, 0.90, 1.03, 1.17, 1.30],
+    handball:   [0.74, 0.91, 1.04, 1.18, 1.31],
+    boxing:     [0.72, 0.89, 1.02, 1.15, 1.28],
+    tennis:     [0.72, 0.90, 1.02, 1.16, 1.29],
+    other:      [0.72, 0.90, 1.02, 1.16, 1.29],
+  },
+
+  'F. Plantar Tobillo': {
+    unit:'N', higher:true,
+    football:   [964, 1253, 1471, 1665, 1854],  // VALD EPL 2025/26
+    rugby:      [1020, 1325, 1555, 1760, 1960],
+    basketball: [940, 1221, 1435, 1624, 1810],
+    volleyball: [920, 1196, 1406, 1591, 1774],  // High calf demand from jump volume
+    hockey:     [950, 1233, 1449, 1640, 1828],
+    handball:   [970, 1260, 1480, 1675, 1866],
+    boxing:     [890, 1160, 1365, 1546, 1723],
+    tennis:     [900, 1170, 1376, 1557, 1734],
+    other:      [890, 1160, 1365, 1546, 1723],
+  },
+
+  'Asimetría Tobillo': {
+    unit:'%', higher:false, note:'Menor = más simétrico',
+    football:   [15, 9, 5, 3, 1],  // VALD EPL 2025/26
+    rugby:      [15, 9, 5, 3, 1],
+    basketball: [15, 9, 5, 3, 1],
+    volleyball: [14, 8, 5, 2, 1],
+    hockey:     [15, 9, 5, 3, 1],
+    handball:   [15, 9, 5, 3, 1],
+    boxing:     [14, 8, 4, 2, 0],
+    tennis:     [13, 8, 4, 2, 0],
+    other:      [15, 9, 5, 3, 1],
+  },
+
+  'F. Iso Rodilla': {
+    unit:'N', higher:true,
+    football:   [1644, 2199, 2527, 2962, 3462],  // VALD EPL 2025/26
+    rugby:      [1820, 2430, 2790, 3270, 3820],  // Higher BM
+    basketball: [1700, 2270, 2610, 3060, 3570],
+    volleyball: [1620, 2165, 2490, 2920, 3410],
+    hockey:     [1660, 2218, 2549, 2990, 3490],
+    handball:   [1700, 2270, 2610, 3060, 3570],
+    boxing:     [1520, 2040, 2350, 2760, 3230],
+    tennis:     [1560, 2085, 2400, 2815, 3290],
+    other:      [1520, 2040, 2350, 2760, 3230],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // SMARTSPEED — SPRINT
+  // ─────────────────────────────────────────────────────────────
+  '10m': {
+    unit:'s', higher:false,
+    football:   [1.82, 1.73, 1.69, 1.65, 1.59],  // Sprinting literature élite fútbol
+    rugby:      [1.78, 1.70, 1.66, 1.62, 1.56],  // Rugby backs faster; fwds ~1.72-1.78; pooled
+    basketball: [1.84, 1.75, 1.70, 1.66, 1.60],
+    volleyball: [1.85, 1.76, 1.71, 1.67, 1.61],  // Less sprint-specific
+    hockey:     [1.81, 1.72, 1.68, 1.64, 1.58],
+    handball:   [1.80, 1.71, 1.67, 1.63, 1.57],
+    boxing:     [1.83, 1.75, 1.71, 1.67, 1.61],
+    tennis:     [1.84, 1.76, 1.72, 1.68, 1.62],
+    other:      [1.85, 1.77, 1.73, 1.69, 1.63],
+  },
+
+  '20m': {
+    unit:'s', higher:false,
+    football:   [3.12, 2.98, 2.90, 2.83, 2.74],
+    rugby:      [3.05, 2.91, 2.84, 2.77, 2.68],
+    basketball: [3.14, 3.00, 2.92, 2.85, 2.76],
+    volleyball: [3.16, 3.02, 2.94, 2.87, 2.78],
+    hockey:     [3.10, 2.96, 2.88, 2.81, 2.72],
+    handball:   [3.08, 2.94, 2.86, 2.79, 2.70],
+    boxing:     [3.16, 3.02, 2.94, 2.87, 2.78],
+    tennis:     [3.18, 3.04, 2.96, 2.89, 2.80],
+    other:      [3.20, 3.06, 2.98, 2.91, 2.82],
+  },
+
+  '30m': {
+    unit:'s', higher:false,
+    football:   [4.30, 4.12, 4.00, 3.90, 3.76],
+    rugby:      [4.20, 4.03, 3.92, 3.82, 3.68],
+    basketball: [4.33, 4.15, 4.03, 3.93, 3.79],
+    volleyball: [4.35, 4.17, 4.05, 3.95, 3.81],
+    hockey:     [4.27, 4.10, 3.98, 3.88, 3.74],
+    handball:   [4.25, 4.08, 3.96, 3.86, 3.72],
+    boxing:     [4.35, 4.17, 4.05, 3.95, 3.81],
+    tennis:     [4.38, 4.20, 4.08, 3.98, 3.84],
+    other:      [4.40, 4.22, 4.10, 4.00, 3.86],
+  },
+
+  '40m': {
+    unit:'s', higher:false,
+    football:   [5.56, 5.30, 5.14, 5.00, 4.82],
+    rugby:      [5.44, 5.18, 5.03, 4.89, 4.72],
+    basketball: [5.60, 5.33, 5.18, 5.04, 4.86],
+    volleyball: [5.63, 5.36, 5.20, 5.06, 4.88],
+    hockey:     [5.52, 5.26, 5.11, 4.97, 4.79],
+    handball:   [5.50, 5.24, 5.09, 4.95, 4.77],
+    boxing:     [5.62, 5.35, 5.20, 5.06, 4.88],
+    tennis:     [5.65, 5.38, 5.23, 5.09, 4.91],
+    other:      [5.70, 5.43, 5.28, 5.14, 4.96],
+  },
+
+  'Vmax': {
+    unit:'km/h', higher:true,
+    football:   [28.0, 30.5, 32.0, 33.5, 35.5],
+    rugby:      [28.5, 31.0, 32.5, 34.0, 36.0],  // Backs can reach elite speeds
+    basketball: [27.0, 29.0, 30.5, 32.0, 34.0],
+    volleyball: [26.0, 28.0, 29.5, 31.0, 33.0],  // Less Vmax specific
+    hockey:     [27.5, 30.0, 31.5, 33.0, 35.0],
+    handball:   [27.5, 30.0, 31.5, 33.0, 35.0],
+    boxing:     [25.5, 27.5, 29.0, 30.5, 32.5],
+    tennis:     [25.0, 27.0, 28.5, 30.0, 32.0],
+    other:      [25.0, 27.0, 28.5, 30.0, 32.0],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // COD
+  // ─────────────────────────────────────────────────────────────
+  '505 Test': {
+    unit:'s', higher:false,
+    football:   [2.70, 2.52, 2.42, 2.33, 2.22],
+    rugby:      [2.65, 2.47, 2.37, 2.28, 2.17],  // Rugby slightly better absolute COD
+    basketball: [2.72, 2.54, 2.44, 2.35, 2.24],
+    volleyball: [2.75, 2.57, 2.47, 2.38, 2.27],
+    hockey:     [2.70, 2.52, 2.42, 2.33, 2.22],
+    handball:   [2.68, 2.50, 2.40, 2.31, 2.20],
+    boxing:     [2.74, 2.56, 2.46, 2.37, 2.26],
+    tennis:     [2.72, 2.54, 2.44, 2.35, 2.24],
+    other:      [2.76, 2.58, 2.48, 2.39, 2.28],
+  },
+
+  'Déficit COD': {
+    unit:'s', higher:false, note:'505 minus 10m split. Menor = mejor transferencia excéntrica al COD',
+    football:   [0.28, 0.22, 0.18, 0.14, 0.09],
+    rugby:      [0.26, 0.20, 0.16, 0.12, 0.07],
+    basketball: [0.29, 0.23, 0.19, 0.15, 0.10],
+    volleyball: [0.30, 0.24, 0.20, 0.16, 0.11],
+    hockey:     [0.28, 0.22, 0.18, 0.14, 0.09],
+    handball:   [0.27, 0.21, 0.17, 0.13, 0.08],
+    boxing:     [0.30, 0.24, 0.20, 0.16, 0.11],
+    tennis:     [0.29, 0.23, 0.19, 0.15, 0.10],
+    other:      [0.31, 0.25, 0.21, 0.17, 0.12],
+  },
+
+  'T-Test': {
+    unit:'s', higher:false,
+    football:   [11.5, 10.8, 10.4, 10.0, 9.5],
+    rugby:      [11.3, 10.6, 10.2, 9.8, 9.3],
+    basketball: [11.0, 10.4, 10.0, 9.6, 9.1],  // Basketball: high COD demand
+    volleyball: [11.2, 10.6, 10.2, 9.8, 9.3],
+    hockey:     [11.2, 10.5, 10.1, 9.7, 9.2],
+    handball:   [11.1, 10.4, 10.0, 9.6, 9.1],
+    boxing:     [11.4, 10.8, 10.4, 10.0, 9.5],
+    tennis:     [11.3, 10.7, 10.3, 9.9, 9.4],
+    other:      [11.6, 10.9, 10.5, 10.1, 9.6],
+  },
+
+  'Illinois Test': {
+    unit:'s', higher:false,
+    football:   [16.0, 15.2, 14.7, 14.2, 13.5],
+    rugby:      [15.7, 14.9, 14.4, 13.9, 13.2],
+    basketball: [15.8, 15.0, 14.5, 14.0, 13.3],
+    volleyball: [16.0, 15.2, 14.7, 14.2, 13.5],
+    hockey:     [15.8, 15.0, 14.5, 14.0, 13.3],
+    handball:   [15.7, 14.9, 14.4, 13.9, 13.2],
+    boxing:     [16.1, 15.3, 14.8, 14.3, 13.6],
+    tennis:     [16.0, 15.2, 14.7, 14.2, 13.5],
+    other:      [16.3, 15.5, 15.0, 14.5, 13.8],
+  },
+
+  'Asimetría 505': {
+    unit:'%', higher:false, note:'Asimetría izquierda/derecha 505. >10% = riesgo aumentado de lesión',
+    football:   [8, 5, 3, 2, 0],
+    rugby:      [8, 5, 3, 2, 0],
+    basketball: [8, 5, 3, 2, 0],
+    volleyball: [7, 4, 3, 1, 0],
+    hockey:     [8, 5, 3, 2, 0],
+    handball:   [8, 5, 3, 2, 0],
+    boxing:     [7, 4, 2, 1, 0],
+    tennis:     [7, 4, 2, 1, 0],
+    other:      [8, 5, 3, 2, 0],
+  },
+};
+
+// ══ PERCENTILE ════════════════════════════════════════════════
+function calcPct(val, norms_arr, higher) {
+  const v = parseFloat(val);
+  if (isNaN(v)||!norms_arr) return null;
+  const [p5,p25,p50,p75,p95] = norms_arr;
+  if (higher===null) {
+    const abs=Math.abs(v);
+    const sorted=[...norms_arr].map(Math.abs).sort((a,b)=>a-b);
+    const [a5,a25,a50,a75,a95]=sorted;
+    if(abs<=a5)  return {label:'>P95',   cls:'pct-elite',rank:97,color:'#10B981'};
+    if(abs<=a25) return {label:'P75–P95',cls:'pct-good', rank:85,color:'#3B82F6'};
+    if(abs<=a50) return {label:'P50–P75',cls:'pct-avg',  rank:62,color:'#FF6B1A'};
+    if(abs<=a75) return {label:'P25–P50',cls:'pct-below',rank:37,color:'#F59E0B'};
+    if(abs<=a95) return {label:'P5–P25', cls:'pct-low',  rank:15,color:'#EF4444'};
+    return {label:'<P5',cls:'pct-very-low',rank:3,color:'#DC2626'};
+  }
+  if (higher===false) {
+    if(v<=p5)  return {label:'>P95',   cls:'pct-elite',rank:97,color:'#10B981'};
+    if(v<=p25) return {label:'P75–P95',cls:'pct-good', rank:85,color:'#3B82F6'};
+    if(v<=p50) return {label:'P50–P75',cls:'pct-avg',  rank:62,color:'#FF6B1A'};
+    if(v<=p75) return {label:'P25–P50',cls:'pct-below',rank:37,color:'#F59E0B'};
+    if(v<=p95) return {label:'P5–P25', cls:'pct-low',  rank:15,color:'#EF4444'};
+    return {label:'<P5',cls:'pct-very-low',rank:3,color:'#DC2626'};
+  }
+  if(v>=p95) return {label:'>P95',   cls:'pct-elite',rank:97,color:'#10B981'};
+  if(v>=p75) return {label:'P75–P95',cls:'pct-good', rank:85,color:'#3B82F6'};
+  if(v>=p50) return {label:'P50–P75',cls:'pct-avg',  rank:62,color:'#FF6B1A'};
+  if(v>=p25) return {label:'P25–P50',cls:'pct-below',rank:37,color:'#F59E0B'};
+  if(v>=p5)  return {label:'P5–P25', cls:'pct-low',  rank:15,color:'#EF4444'};
+  return {label:'<P5',cls:'pct-very-low',rank:3,color:'#DC2626'};
+}
+
+function lookupNorm(metricName, sport, moment) {
+  if (!metricName) return null;
+  // Fuzzy match
+  const name = metricName.trim();
+  let n = NORMS[name];
+  if (!n) {
+    // Try case-insensitive
+    const key = Object.keys(NORMS).find(k => k.toLowerCase() === name.toLowerCase());
+    if (key) n = NORMS[key];
+  }
+  if (!n) return null;
+  const arr = n[sport] || n['football'] || null; // fallback to football
+  if (!arr) return null;
+  return { norms: arr, higher: n.higher, note: n.note, unit: n.unit };
+}
+
+// ══ NAV ══════════════════════════════════════════════════════
+let currentPanel = 'dashboard';
+function nav(panel, data={}) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  const el = document.getElementById('panel-'+panel);
+  if(el) el.classList.add('active');
+  const ni = document.querySelector(`.sb-item[onclick="nav('${panel}')"]`);
+  if(ni) ni.classList.add('active');
+  currentPanel = panel;
+  const titles = {
+    dashboard:'Dashboard', athletes:'Atletas', 'new-test':'Nuevo Testeo',
+    history:'Historial', calendar:'Calendario', norms:'Normativa',
+    settings:'Ajustes','athlete-profile':'Perfil del Atleta',
+    prescription:'Prescripción de Entrenamiento',
+    library:'Biblioteca de Referencias'
+  };
+  document.getElementById('topbarTitle').textContent = titles[panel]||panel;
+  if(panel==='dashboard') renderDashboard();
+  else if(panel==='athletes') renderAthletes();
+  else if(panel==='history') renderHistory();
+  else if(panel==='calendar') renderCalendar();
+  else if(panel==='new-test') initTestForm(data);
+  else if(panel==='norms') renderNorms();
+  else if(panel==='prescription') initPrescriptionPanel(data);
+  else if(panel==='library') renderLibrary();
+  else if(panel==='athlete-profile' && data.id) renderAthleteProfile(data.id);
+  else if(panel==='settings') loadSettings();
+}
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+// ══ DASHBOARD ════════════════════════════════════════════════
+function renderDashboard() {
+  const db = DB.get();
+  const aths = db.athletes||[];
+  const tests = db.tests||[];
+  const today = new Date();
+
+  // KPIs
+  const upcoming = tests.filter(t=>t.nextDate && new Date(t.nextDate)>today).length;
+  const thisMonth = tests.filter(t=>{const d=new Date(t.date);return d.getMonth()===today.getMonth()&&d.getFullYear()===today.getFullYear()}).length;
+  document.getElementById('dash-kpis').innerHTML = `
+    <div class="kpi"><div class="kpi-top" style="background:#FF6B1A"></div><div class="kpi-label">Atletas</div><div class="kpi-val">${aths.length}</div><div class="kpi-meta">Registrados</div></div>
+    <div class="kpi"><div class="kpi-top" style="background:#10B981"></div><div class="kpi-label">Testeos Totales</div><div class="kpi-val">${tests.length}</div><div class="kpi-meta">Todos los dispositivos</div></div>
+    <div class="kpi"><div class="kpi-top" style="background:#3B82F6"></div><div class="kpi-label">Este Mes</div><div class="kpi-val">${thisMonth}</div><div class="kpi-meta">Testeos realizados</div></div>
+    <div class="kpi"><div class="kpi-top" style="background:#F59E0B"></div><div class="kpi-label">Próximos</div><div class="kpi-val">${upcoming}</div><div class="kpi-meta">Testeos agendados</div></div>`;
+
+  // Upcoming
+  const upTests = tests.filter(t=>t.nextDate&&new Date(t.nextDate)>today)
+    .sort((a,b)=>new Date(a.nextDate)-new Date(b.nextDate)).slice(0,5);
+  document.getElementById('dash-upcoming').innerHTML = upTests.length
+    ? upTests.map(t=>{
+        const a=aths.find(x=>x.id===t.athleteId)||{};
+        const nd=new Date(t.nextDate);
+        const m=MOMENTS[t.moment]||MOMENTS.pre;
+        return `<div class="cal-event" style="border-color:${m.color}">
+          <div style="text-align:center;min-width:40px"><div class="cal-date" style="color:${m.color}">${nd.getDate()}</div><div class="cal-month">${nd.toLocaleString('es',{month:'short'})}</div></div>
+          <div style="flex:1"><div style="font-weight:600;font-size:13px">${a.firstName||''} ${a.lastName||''}</div><div style="font-size:11px;color:var(--g3)">${DEVICES[t.device]?.label||t.device} · ${t.testType}</div></div>
+          <span class="badge ${m.cls}">${m.label}</span>
+        </div>`;
+      }).join('')
+    : '<div class="empty" style="padding:24px"><div class="empty-icon" style="font-size:28px">📅</div><div class="empty-sub">Sin testeos agendados</div></div>';
+
+  // Recent
+  const recent = [...tests].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+  document.getElementById('dash-recent').innerHTML = recent.length
+    ? recent.map(t=>{
+        const a=aths.find(x=>x.id===t.athleteId)||{};
+        const d=new Date(t.date);
+        const dev=DEVICES[t.device]||{};
+        return `<div class="cal-event" style="border-color:${dev.color||'var(--bdr)'}">
+          <div style="text-align:center;min-width:40px"><div class="cal-date" style="color:${dev.color||'var(--o)'};font-size:18px">${d.getDate()}</div><div class="cal-month">${d.toLocaleString('es',{month:'short'})}</div></div>
+          <div style="flex:1"><div style="font-weight:600;font-size:13px">${a.firstName||''} ${a.lastName||''}</div><div style="font-size:11px;color:var(--g3)">${dev.label||t.device} · ${t.testType} · ${t.metrics?.length||0} métricas</div></div>
+          <button class="btn btn-ghost btn-xs" onclick="openTestDetail('${t.id}')">Ver</button>
+        </div>`;
+      }).join('')
+    : '<div class="empty" style="padding:24px"><div class="empty-icon" style="font-size:28px">📋</div><div class="empty-sub">Sin testeos aún</div></div>';
+
+  // Athletes preview
+  const preview = aths.slice(0,6);
+  document.getElementById('dash-athletes').innerHTML = preview.length
+    ? preview.map(a=>athleteCardHTML(a,db.tests)).join('')
+    : '<div style="color:var(--g3);font-size:13px;padding:20px">Sin atletas. <span style="color:var(--o);cursor:pointer" onclick="openAthleteModal()">Agregá el primero →</span></div>';
+}
+
+// ══ ATHLETE CARD ══════════════════════════════════════════════
+function athleteCardHTML(a, allTests) {
+  const sp = SPORTS[a.sport]||SPORTS.other;
+  const mo = MOMENTS[a.moment]||MOMENTS.pre;
+  const athTests = (allTests||[]).filter(t=>t.athleteId===a.id);
+  const lastTest = athTests.sort((x,y)=>new Date(y.date)-new Date(x.date))[0];
+  const age = a.dob ? Math.floor((Date.now()-new Date(a.dob))/(365.25*24*3600*1000)) : null;
+  return `<div class="ath-card" onclick="viewAthlete('${a.id}')">
+    <div class="ath-card-accent" style="background:${sp.color}"></div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+      <div class="ath-card-name">${a.firstName} <span class="ac">${a.lastName}</span></div>
+      <span class="badge ${mo.cls}">${mo.label}</span>
+    </div>
+    <div class="ath-card-meta">
+      <span>${sp.icon} ${sp.label}</span>
+      ${a.position?`<span>· ${a.position}</span>`:''}
+      ${age?`<span>· ${age}a`:''}
+      ${a.club?`<span>· ${a.club}</span>`:''}
+    </div>
+    <div class="ath-card-stats">
+      <div><div class="ath-stat-val">${athTests.length}</div><div class="ath-stat-lbl">Testeos</div></div>
+      <div><div class="ath-stat-val" style="font-size:13px">${lastTest?new Date(lastTest.date).toLocaleDateString('es',{day:'2-digit',month:'short'}):'—'}</div><div class="ath-stat-lbl">Último test</div></div>
+      <div><div class="ath-stat-val">${a.bm||'—'}</div><div class="ath-stat-lbl">kg</div></div>
+    </div>
+  </div>`;
+}
+function viewAthlete(id){nav('athlete-profile',{id})}
+
+// ══ ATHLETES ══════════════════════════════════════════════════
+let athFilter='', athSportFilter='';
+function renderAthletes(){
+  const db=DB.get();
+  let aths=db.athletes||[];
+  if(athFilter) aths=aths.filter(a=>(a.firstName+' '+a.lastName).toLowerCase().includes(athFilter.toLowerCase()));
+  if(athSportFilter) aths=aths.filter(a=>a.sport===athSportFilter);
+  const el=document.getElementById('athletes-grid');
+  el.innerHTML=aths.length
+    ? aths.map(a=>athleteCardHTML(a,db.tests)).join('')
+    : `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">👥</div><div class="empty-title">Sin atletas</div><div class="empty-sub">Agregá tu primer atleta para empezar</div><br><button class="btn btn-primary" onclick="openAthleteModal()">+ Agregar Atleta</button></div>`;
+}
+function filterAthletes(v){athFilter=v;renderAthletes()}
+function filterAthletesBySport(v){athSportFilter=v;renderAthletes()}
+
+// ══ ATHLETE MODAL ═════════════════════════════════════════════
+let editingAthlete=null;
+function openAthleteModal(id=null){
+  editingAthlete=id;
+  const m=document.getElementById('athlete-modal');
+  const db=DB.get();
+  if(id){
+    const a=db.athletes.find(x=>x.id===id);
+    if(!a)return;
+    document.getElementById('ath-modal-title').textContent='Editar Atleta';
+    document.getElementById('ath-first').value=a.firstName||'';
+    document.getElementById('ath-last').value=a.lastName||'';
+    document.getElementById('ath-dob').value=a.dob||'';
+    document.getElementById('ath-sport').value=a.sport||'football';
+    document.getElementById('ath-position').value=a.position||'';
+    document.getElementById('ath-bm').value=a.bm||'';
+    document.getElementById('ath-height').value=a.height||'';
+    document.getElementById('ath-moment').value=a.moment||'pre';
+    document.getElementById('ath-club').value=a.club||'';
+    document.getElementById('ath-email').value=a.email||'';
+    document.getElementById('ath-notes').value=a.notes||'';
+    document.getElementById('ath-edit-id').value=id;
+  } else {
+    document.getElementById('ath-modal-title').textContent='Nuevo Atleta';
+    ['ath-first','ath-last','ath-dob','ath-position','ath-bm','ath-height','ath-club','ath-email','ath-notes'].forEach(id2=>document.getElementById(id2).value='');
+    document.getElementById('ath-sport').value='football';
+    document.getElementById('ath-moment').value='pre';
+    document.getElementById('ath-edit-id').value='';
+  }
+  m.style.display='flex';
+}
+function closeAthleteModal(e){
+  if(e&&e.target!==document.getElementById('athlete-modal'))return;
+  document.getElementById('athlete-modal').style.display='none';
+}
+function saveAthlete(){
+  const fn=document.getElementById('ath-first').value.trim();
+  const ln=document.getElementById('ath-last').value.trim();
+  if(!fn||!ln){alert('Nombre y apellido son obligatorios');return}
+  const db=DB.get();
+  const editId=document.getElementById('ath-edit-id').value;
+  const data={
+    firstName:fn,lastName:ln,
+    dob:document.getElementById('ath-dob').value,
+    sport:document.getElementById('ath-sport').value,
+    position:document.getElementById('ath-position').value,
+    bm:document.getElementById('ath-bm').value,
+    height:document.getElementById('ath-height').value,
+    moment:document.getElementById('ath-moment').value,
+    club:document.getElementById('ath-club').value,
+    email:document.getElementById('ath-email').value,
+    notes:document.getElementById('ath-notes').value,
+    updatedAt:new Date().toISOString()
+  };
+  if(editId){
+    const idx=db.athletes.findIndex(x=>x.id===editId);
+    if(idx>=0) db.athletes[idx]={...db.athletes[idx],...data};
+  } else {
+    data.id=DB.nextId(); data.createdAt=new Date().toISOString();
+    db.athletes.push(data);
+  }
+  DB.commit();
+  document.getElementById('athlete-modal').style.display='none';
+  if(currentPanel==='athletes') renderAthletes();
+  else if(currentPanel==='dashboard') renderDashboard();
+  else if(currentPanel==='athlete-profile') renderAthleteProfile(editId||data.id);
+}
+
+// ══ ATHLETE PROFILE ═══════════════════════════════════════════
+function renderAthleteProfile(id){
+  const db=DB.get();
+  const a=db.athletes.find(x=>x.id===id);
+  if(!a){document.getElementById('athlete-profile-content').innerHTML='<p>No encontrado</p>';return}
+  const sp=SPORTS[a.sport]||SPORTS.other;
+  const mo=MOMENTS[a.moment]||MOMENTS.pre;
+  const age=a.dob?Math.floor((Date.now()-new Date(a.dob))/(365.25*24*3600*1000)):null;
+  const athTests=(db.tests||[]).filter(t=>t.athleteId===id).sort((x,y)=>new Date(y.date)-new Date(x.date));
+
+  // Group tests by device+type
+  const byDevice={};
+  athTests.forEach(t=>{
+    const key=t.device+':'+t.testType;
+    if(!byDevice[key])byDevice[key]=[];
+    byDevice[key].push(t);
+  });
+
+  let chartsHTML='';
+  Object.entries(byDevice).forEach(([key,tests])=>{
+    if(tests.length<2)return;
+    const [dev,type]=key.split(':');
+    const devCfg=DEVICES[dev]||{};
+    // Collect all metric names
+    const metricNames=[...new Set(tests.flatMap(t=>(t.metrics||[]).map(m=>m.name)))];
+    if(!metricNames.length)return;
+    chartsHTML+=`<div class="card" style="margin-bottom:14px">
+      <div class="card-title">${devCfg.icon||''} ${devCfg.label||dev} — ${type} — Evolución</div>
+      <div style="overflow-x:auto">
+      ${metricNames.slice(0,4).map(mn=>{
+        const vals=tests.map(t=>{const m=(t.metrics||[]).find(x=>x.name===mn);return{date:t.date,val:m?parseFloat(m.value):null}}).filter(x=>x.val!==null).reverse();
+        if(vals.length<2)return'';
+        return`<div style="margin-bottom:12px">
+          <div style="font-size:11px;color:var(--g2);margin-bottom:6px;font-weight:600">${mn}</div>
+          <div class="chart-wrap"><canvas id="chart_${id}_${mn.replace(/\W/g,'_')}"></canvas></div>
+        </div>`;
+      }).join('')}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('athlete-profile-content').innerHTML=`
+    <div class="ath-hero" style="margin-bottom:20px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="ath-hero-name">${a.firstName} <span class="ac">${a.lastName}</span></div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap">
+            <span class="badge ${mo.cls}"><span class="moment-dot" style="background:${mo.color}"></span>${mo.label}</span>
+            <span style="font-size:12px;color:var(--g2)">${sp.icon} ${sp.label}</span>
+            ${a.position?`<span style="font-size:12px;color:var(--g3)">· ${a.position}</span>`:''}
+            ${age?`<span style="font-size:12px;color:var(--g3)">· ${age} años</span>`:''}
+            ${a.bm?`<span style="font-size:12px;color:var(--g3)">· ${a.bm} kg</span>`:''}
+            ${a.club?`<span style="font-size:12px;color:var(--g3)">· ${a.club}</span>`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="openAthleteModal('${id}')">✏️ Editar</button>
+          <button class="btn btn-ghost btn-sm" onclick="nav('prescription',{athleteId:'${id}'})">🎯 Prescripción</button>
+          <button class="btn btn-primary btn-sm" onclick="nav('new-test',{athleteId:'${id}'})">+ Nuevo Test</button>
+        </div>
+      </div>
+      ${a.notes?`<div style="margin-top:12px;padding:10px 14px;background:var(--dk3);border-radius:var(--r8);font-size:12px;color:var(--g2)">${a.notes}</div>`:''}
+    </div>
+
+    <!-- Stats -->
+    <div class="g4" style="margin-bottom:20px">
+      <div class="kpi"><div class="kpi-top" style="background:${sp.color}"></div><div class="kpi-label">Testeos</div><div class="kpi-val">${athTests.length}</div></div>
+      <div class="kpi"><div class="kpi-top" style="background:var(--o)"></div><div class="kpi-label">Último Test</div><div class="kpi-val" style="font-size:18px">${athTests[0]?new Date(athTests[0].date).toLocaleDateString('es',{day:'2-digit',month:'short',year:'2-digit'}):'—'}</div></div>
+      <div class="kpi"><div class="kpi-top" style="background:var(--bl)"></div><div class="kpi-label">Próximo Test</div><div class="kpi-val" style="font-size:18px">${athTests.find(t=>t.nextDate&&new Date(t.nextDate)>new Date())?new Date(athTests.find(t=>t.nextDate&&new Date(t.nextDate)>new Date()).nextDate).toLocaleDateString('es',{day:'2-digit',month:'short'}):'—'}</div></div>
+      <div class="kpi"><div class="kpi-top" style="background:var(--gr)"></div><div class="kpi-label">Métricas totales</div><div class="kpi-val">${athTests.reduce((acc,t)=>acc+(t.metrics?.length||0),0)}</div></div>
+    </div>
+
+    <!-- Charts -->
+    ${chartsHTML||''}
+
+    <!-- Test history -->
+    <div class="sec-hd" style="margin-bottom:10px"><div class="sec-title">Historial de <span class="ac">Testeos</span></div></div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="htable">
+        <thead><tr><th>Fecha</th><th>Dispositivo</th><th>Test</th><th>Momento</th><th>Métricas</th><th>Acciones</th></tr></thead>
+        <tbody>
+          ${athTests.length?athTests.map(t=>{
+            const dev=DEVICES[t.device]||{};
+            const mo2=MOMENTS[t.moment]||MOMENTS.pre;
+            return`<tr>
+              <td>${new Date(t.date).toLocaleDateString('es',{day:'2-digit',month:'short',year:'numeric'})}</td>
+              <td><span style="color:${dev.color||'var(--g2)'}">${dev.icon||''} ${dev.label||t.device}</span></td>
+              <td>${t.testType}</td>
+              <td><span class="badge ${mo2.cls}">${mo2.label}</span></td>
+              <td>${t.metrics?.length||0} métricas</td>
+              <td style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" onclick="openTestDetail('${t.id}')">Ver</button><button class="btn btn-danger btn-xs" onclick="deleteTest('${t.id}','${id}')">✕</button></td>
+            </tr>`;
+          }).join(''):`<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--g3)">Sin testeos aún</td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
+
+  // Draw charts
+  setTimeout(()=>{
+    Object.entries(byDevice).forEach(([key,tests])=>{
+      if(tests.length<2)return;
+      const [,type]=key.split(':');
+      const metricNames=[...new Set(tests.flatMap(t=>(t.metrics||[]).map(m=>m.name)))];
+      metricNames.slice(0,4).forEach(mn=>{
+        const canvasId=`chart_${id}_${mn.replace(/\W/g,'_')}`;
+        const canvas=document.getElementById(canvasId);
+        if(!canvas)return;
+        const vals=tests.map(t=>{const m=(t.metrics||[]).find(x=>x.name===mn);return{date:t.date,val:m?parseFloat(m.value):null}}).filter(x=>x.val!==null).reverse();
+        const norm=lookupNormByName(mn,a.sport);
+        const datasets=[{
+          label:mn,data:vals.map(v=>v.val),
+          borderColor:'#FF6B1A',backgroundColor:'rgba(255,107,26,.1)',
+          borderWidth:2,pointRadius:4,pointBackgroundColor:'#FF6B1A',tension:.3,fill:true
+        }];
+        if(norm){
+          datasets.push({label:'Mediana EPL',data:vals.map(()=>norm.norms[2]),borderColor:'rgba(59,130,246,.5)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false});
+        }
+        new Chart(canvas,{
+          type:'line',
+          data:{labels:vals.map(v=>new Date(v.date).toLocaleDateString('es',{day:'2-digit',month:'short'})),datasets},
+          options:{responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{labels:{color:'#A8B4C8',font:{size:10}}}},
+            scales:{x:{ticks:{color:'#5A6478',font:{size:10}},grid:{color:'#252B38'}},
+                    y:{ticks:{color:'#5A6478',font:{size:10}},grid:{color:'#252B38'}}}}
+        });
+      });
+    });
+  },100);
+}
+function lookupNormByName(name,sport){
+  let n=NORMS[name];
+  if(!n){const k=Object.keys(NORMS).find(k=>k.toLowerCase()===name.toLowerCase());if(k)n=NORMS[k];}
+  if(!n)return null;
+  const arr=n[sport]||n.football||null;
+  if(!arr)return null;
+  return{norms:arr,higher:n.higher,note:n.note,unit:n.unit};
+}
+
+// ══ NEW TEST FORM ═════════════════════════════════════════════
+let selectedDevice='forcedecks', selectedTestType='CMJ';
+function initTestForm(data={}){
+  document.getElementById('test-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('test-next-date').value='';
+  document.getElementById('test-notes').value='';
+  document.getElementById('test-season-moment').value='pre';
+  // Populate athlete select
+  const db=DB.get();
+  const sel=document.getElementById('test-athlete-select');
+  sel.innerHTML='<option value="">Seleccionar atleta…</option>';
+  (db.athletes||[]).forEach(a=>{
+    const opt=document.createElement('option');
+    opt.value=a.id;
+    opt.textContent=`${a.firstName} ${a.lastName} (${SPORTS[a.sport]?.icon||''} ${SPORTS[a.sport]?.label||a.sport})`;
+    if(data.athleteId===a.id) opt.selected=true;
+    sel.appendChild(opt);
+  });
+  // Set athlete moment if selected
+  if(data.athleteId){
+    const a=db.athletes.find(x=>x.id===data.athleteId);
+    if(a&&a.moment) document.getElementById('test-season-moment').value=a.moment;
+  }
+  sel.onchange=()=>{
+    const a=db.athletes.find(x=>x.id===sel.value);
+    if(a&&a.moment) document.getElementById('test-season-moment').value=a.moment;
+    refreshMetricNorms();
+  };
+  selectDevice(document.querySelector('.tdt[data-dev="forcedecks"]'),'forcedecks');
+}
+function selectDevice(el,dev){
+  document.querySelectorAll('.tdt').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  selectedDevice=dev;
+  const devCfg=DEVICES[dev];
+  const grid=document.getElementById('test-type-grid');
+  grid.innerHTML=Object.entries(devCfg.tests).map(([k,v])=>
+    `<div class="ttg-item${k===selectedTestType?' selected':''}" onclick="selectTestType('${k}',this)">
+      <div class="ttg-icon">${v.icon}</div>
+      <div class="ttg-label">${v.label}</div>
+    </div>`
+  ).join('');
+  selectTestType(Object.keys(devCfg.tests)[0], grid.querySelector('.ttg-item'));
+}
+function selectTestType(type, el){
+  document.querySelectorAll('.ttg-item').forEach(i=>i.classList.remove('selected'));
+  if(el) el.classList.add('selected');
+  selectedTestType=type;
+  buildMetricRows(type);
+}
+function buildMetricRows(type){
+  const card=document.getElementById('metrics-card');
+  const title=document.getElementById('metrics-card-title');
+  const rows=document.getElementById('metrics-rows');
+  card.style.display='block';
+  title.textContent=`3 — Métricas · ${selectedDevice.toUpperCase()} · ${type}`;
+
+  // Suggested metrics per test type
+  const suggestions={
+    CMJ:['Altura CMJ','Pot. Pico CMJ','FT:CT','RSI CMJ','Impulso Conc. 100ms','Pot. Pico Exc.','Vel. Pico Exc. CMJ','Profundidad CM','Impulso Dec. Exc.'],
+    SJ:['Altura SJ','Pot. Pico SJ','RSI SJ','Contracción SJ'],
+    DJ:['Altura DJ','RSI DJ','Contacto DJ','Profundidad CM DJ'],
+    SLDJ:['Altura SLDJ','RSI SLDJ','Contacto SLDJ'],
+    HOP:['Altura Hop','RSI Hop','Contacto Hop'],
+    IMTP:['F. Pico IMTP','F. Pico IMTP / MC','F@100ms IMTP','F@100ms IMTP / MC'],
+    NORDIC:['F. Nórdico','Torque Nórdico','Asimetría Nórdico'],
+    SLJ:['Altura SLJ'],
+    HIP_ABDADD:['ABD 45°','ADD 45°','ADD:ABD 45°','ABD 60°','ADD 60°','ADD:ABD 60°'],
+    ANKLE:['F. Plantar Tobillo','Asimetría Tobillo'],
+    ISO_KNEE:['F. Iso Rodilla'],
+    SPRINT:['10m','20m','30m','40m','Vmax'],
+    COD:['505 Test','Déficit COD','T-Test','Illinois Test','Asimetría 505'],
+    CUSTOM:[],
+  };
+  const sugg=suggestions[type]||[];
+  rows.innerHTML='';
+  sugg.forEach(name=>addMetricRow(name));
+  if(!sugg.length) addMetricRow();
+  refreshMetricNorms();
+}
+function addMetricRow(name=''){
+  const rows=document.getElementById('metrics-rows');
+  const id='mr_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+  const div=document.createElement('div');
+  div.className='metric-row';
+  div.id=id;
+  div.innerHTML=`
+    <input class="metric-name-input" placeholder="Nombre de la métrica…" value="${name}" oninput="refreshMetricNorms()">
+    <input class="metric-val-input" type="number" step="any" placeholder="—" oninput="refreshSingleNorm(this.closest('.metric-row'))">
+    <input class="metric-unit-input" placeholder="cm / s / N…" value="">
+    <div class="metric-pct"><span class="pct pct-none" id="${id}_pct">—</span></div>
+    <div style="display:flex;flex-direction:column;gap:3px">
+      <div class="metric-gauge"><div class="metric-gauge-fill" id="${id}_gauge" style="width:0%;background:var(--bdr)"></div></div>
+      <button class="btn btn-xs" style="background:transparent;color:var(--g4);border:none;padding:1px 4px;font-size:10px" onclick="this.closest('.metric-row').remove()">✕</button>
+    </div>`;
+  rows.appendChild(div);
+  // Auto-fill unit from norms
+  if(name){
+    const n=NORMS[name]||Object.values(NORMS).find((_,i)=>Object.keys(NORMS)[i].toLowerCase()===name.toLowerCase());
+    if(n&&n.unit) div.querySelector('.metric-unit-input').value=n.unit;
+  }
+}
+function refreshMetricNorms(){
+  document.querySelectorAll('.metric-row').forEach(row=>refreshSingleNorm(row));
+}
+function refreshSingleNorm(row){
+  if(!row)return;
+  const id=row.id;
+  const name=row.querySelector('.metric-name-input')?.value?.trim();
+  const val=row.querySelector('.metric-val-input')?.value;
+  const pctEl=document.getElementById(id+'_pct');
+  const gaugeEl=document.getElementById(id+'_gauge');
+  if(!pctEl||!gaugeEl)return;
+  if(!name||!val||isNaN(parseFloat(val))){
+    pctEl.className='pct pct-none';pctEl.textContent='—';
+    gaugeEl.style.width='0%';gaugeEl.style.background='var(--bdr)';return;
+  }
+  const db=DB.get();
+  const athId=document.getElementById('test-athlete-select')?.value;
+  const ath=db.athletes.find(x=>x.id===athId);
+  const sport=ath?.sport||'football';
+  const n=lookupNormByName(name,sport);
+  if(!n){pctEl.className='pct pct-none';pctEl.textContent='Sin norma';gaugeEl.style.width='0';return;}
+  const r=calcPct(val,n.norms,n.higher);
+  if(!r)return;
+  pctEl.className=`pct ${r.cls}`;pctEl.textContent=r.label;
+  gaugeEl.style.width=r.rank+'%';gaugeEl.style.background=r.color;
+  // Auto-fill unit
+  const unitInput=row.querySelector('.metric-unit-input');
+  if(unitInput&&!unitInput.value&&n.unit) unitInput.value=n.unit;
+}
+function calcPct(val, norms_arr, higher){
+  const v=parseFloat(val);
+  if(isNaN(v)||!norms_arr)return null;
+  const[p5,p25,p50,p75,p95]=norms_arr;
+  if(higher===null){
+    const abs=Math.abs(v),sorted=[...norms_arr].map(Math.abs).sort((a,b)=>a-b);
+    const[a5,a25,a50,a75,a95]=sorted;
+    if(abs<=a5) return{label:'>P95',cls:'pct-elite',rank:97,color:'#10B981'};
+    if(abs<=a25)return{label:'P75–P95',cls:'pct-good',rank:85,color:'#3B82F6'};
+    if(abs<=a50)return{label:'P50–P75',cls:'pct-avg',rank:62,color:'#FF6B1A'};
+    if(abs<=a75)return{label:'P25–P50',cls:'pct-below',rank:37,color:'#F59E0B'};
+    if(abs<=a95)return{label:'P5–P25',cls:'pct-low',rank:15,color:'#EF4444'};
+    return{label:'<P5',cls:'pct-very-low',rank:3,color:'#DC2626'};
+  }
+  if(higher===false){
+    if(v<=p5) return{label:'>P95',cls:'pct-elite',rank:97,color:'#10B981'};
+    if(v<=p25)return{label:'P75–P95',cls:'pct-good',rank:85,color:'#3B82F6'};
+    if(v<=p50)return{label:'P50–P75',cls:'pct-avg',rank:62,color:'#FF6B1A'};
+    if(v<=p75)return{label:'P25–P50',cls:'pct-below',rank:37,color:'#F59E0B'};
+    if(v<=p95)return{label:'P5–P25',cls:'pct-low',rank:15,color:'#EF4444'};
+    return{label:'<P5',cls:'pct-very-low',rank:3,color:'#DC2626'};
+  }
+  if(v>=p95)return{label:'>P95',cls:'pct-elite',rank:97,color:'#10B981'};
+  if(v>=p75)return{label:'P75–P95',cls:'pct-good',rank:85,color:'#3B82F6'};
+  if(v>=p50)return{label:'P50–P75',cls:'pct-avg',rank:62,color:'#FF6B1A'};
+  if(v>=p25)return{label:'P25–P50',cls:'pct-below',rank:37,color:'#F59E0B'};
+  if(v>=p5) return{label:'P5–P25',cls:'pct-low',rank:15,color:'#EF4444'};
+  return{label:'<P5',cls:'pct-very-low',rank:3,color:'#DC2626'};
+}
+function clearTestForm(){document.getElementById('metrics-card').style.display='none';}
+
+// ══ SAVE TEST ════════════════════════════════════════════════
+function saveTest(){
+  const athId=document.getElementById('test-athlete-select').value;
+  if(!athId){alert('Seleccioná un atleta');return}
+  const date=document.getElementById('test-date').value;
+  if(!date){alert('Ingresá la fecha');return}
+  const metrics=[];
+  document.querySelectorAll('.metric-row').forEach(row=>{
+    const name=row.querySelector('.metric-name-input')?.value?.trim();
+    const val=row.querySelector('.metric-val-input')?.value?.trim();
+    const unit=row.querySelector('.metric-unit-input')?.value?.trim();
+    if(name&&val) metrics.push({name,value:val,unit});
+  });
+  const db=DB.get();
+  const ath=db.athletes.find(x=>x.id===athId);
+  const test={
+    id:DB.nextId(),
+    athleteId:athId,
+    sport:ath?.sport||'other',
+    device:selectedDevice,
+    testType:selectedTestType,
+    date,
+    moment:document.getElementById('test-season-moment').value,
+    nextDate:document.getElementById('test-next-date').value||null,
+    notes:document.getElementById('test-notes').value,
+    metrics,
+    createdAt:new Date().toISOString()
+  };
+  db.tests=db.tests||[];
+  db.tests.push(test);
+  // Update athlete moment
+  if(ath){ath.moment=test.moment;ath.updatedAt=new Date().toISOString();}
+  DB.commit();
+  showToast('Testeo guardado ✓');
+  nav('athlete-profile',{id:athId});
+}
+
+// ══ TEST DETAIL MODAL ══════════════════════════════════════════
+function openTestDetail(testId){
+  const db=DB.get();
+  const t=db.tests.find(x=>x.id===testId);
+  if(!t)return;
+  const a=db.athletes.find(x=>x.id===t.athleteId)||{};
+  const dev=DEVICES[t.device]||{};
+  const mo=MOMENTS[t.moment]||MOMENTS.pre;
+  document.getElementById('test-modal-title').textContent=`${dev.icon||''} ${dev.label||t.device} — ${t.testType}`;
+  document.getElementById('test-modal-meta').textContent=`${a.firstName||''} ${a.lastName||''} · ${new Date(t.date).toLocaleDateString('es',{day:'2-digit',month:'long',year:'numeric'})} · ${mo.label}`;
+  const sport=a.sport||'football';
+
+  const rowsHTML=(t.metrics||[]).map(m=>{
+    const n=lookupNormByName(m.name,sport);
+    const v=parseFloat(m.value);
+    let normRow='', pctBadge='<span class="pct pct-none">Sin norma</span>';
+    if(n){
+      const r=calcPct(v,n.norms,n.higher);
+      if(r){
+        pctBadge=`<span class="pct ${r.cls}">${r.label}</span>`;
+        const [p5,p25,p50,p75,p95]=n.norms;
+        const pctPos=Math.min(Math.max(r.rank,0),100);
+        normRow=`<div style="margin-top:8px">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--g4);margin-bottom:3px">
+            <span>P5: ${p5}</span><span>P25: ${p25}</span><span style="color:var(--o)">P50: ${p50}</span><span>P75: ${p75}</span><span>P95: ${p95}</span>
+          </div>
+          <div class="norm-bar">
+            <div class="norm-bar-fill"></div>
+            <div class="norm-bar-marker" style="left:${pctPos}%;background:${r.color};box-shadow:0 0 4px ${r.color}"></div>
+          </div>
+          ${n.note?`<div style="font-size:10px;color:var(--g3);margin-top:3px">${n.note}</div>`:''}
+        </div>`;
+      }
+    }
+    return`<div style="padding:12px 0;border-bottom:1px solid var(--bdr2)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div style="font-weight:600;font-size:13px">${m.name}</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-family:var(--fd);font-size:22px;font-weight:800;color:var(--w)">${m.value} <span style="font-size:13px;color:var(--g3)">${m.unit||''}</span></span>
+          ${pctBadge}
+        </div>
+      </div>
+      ${normRow}
+    </div>`;
+  }).join('');
+
+  document.getElementById('test-modal-body').innerHTML=`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+      <span class="badge ${mo.cls}">${mo.label}</span>
+      ${t.nextDate?`<span class="badge badge-pre">Próximo: ${new Date(t.nextDate).toLocaleDateString('es',{day:'2-digit',month:'short'})}</span>`:''}
+      ${t.notes?`<span style="font-size:12px;color:var(--g2)">${t.notes}</span>`:''}
+    </div>
+    <div>${rowsHTML||'<p style="color:var(--g3);text-align:center;padding:24px">Sin métricas registradas</p>'}</div>`;
+  document.getElementById('test-modal').style.display='flex';
+  window._currentTestId=testId;
+}
+function closeTestModal(e){
+  if(e&&e.target!==document.getElementById('test-modal'))return;
+  document.getElementById('test-modal').style.display='none';
+}
+function deleteTest(testId,athleteId){
+  if(!confirm('¿Eliminar este testeo?'))return;
+  const db=DB.get();
+  db.tests=db.tests.filter(t=>t.id!==testId);
+  DB.commit();
+  renderAthleteProfile(athleteId);
+}
+
+// ══ HISTORY ══════════════════════════════════════════════════
+function renderHistory(){
+  const db=DB.get();
+  const athFilter=document.getElementById('history-filter-athlete')?.value||'';
+  const devFilter=document.getElementById('history-filter-device')?.value||'';
+  // Populate athlete filter
+  const sel=document.getElementById('history-filter-athlete');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Todos los atletas</option>';
+  (db.athletes||[]).forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=`${a.firstName} ${a.lastName}`;if(a.id===cur)o.selected=true;sel.appendChild(o);});
+  let tests=[...(db.tests||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(athFilter) tests=tests.filter(t=>t.athleteId===athFilter);
+  if(devFilter) tests=tests.filter(t=>t.device===devFilter);
+  const tbody=document.getElementById('history-tbody');
+  tbody.innerHTML=tests.length?tests.map(t=>{
+    const a=db.athletes.find(x=>x.id===t.athleteId)||{};
+    const dev=DEVICES[t.device]||{};
+    const mo=MOMENTS[t.moment]||MOMENTS.pre;
+    return`<tr>
+      <td style="cursor:pointer;color:var(--o)" onclick="viewAthlete('${t.athleteId}')">${a.firstName||''} ${a.lastName||''}</td>
+      <td>${new Date(t.date).toLocaleDateString('es',{day:'2-digit',month:'short',year:'numeric'})}</td>
+      <td><span style="color:${dev.color||'var(--g2)'}">${dev.icon||''} ${dev.label||t.device}</span></td>
+      <td>${t.testType}</td>
+      <td><span class="badge ${mo.cls}">${mo.label}</span></td>
+      <td>${t.metrics?.length||0} métricas</td>
+      <td><button class="btn btn-ghost btn-xs" onclick="openTestDetail('${t.id}')">Ver</button></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--g3)">Sin testeos registrados</td></tr>';
+}
+
+// ══ CALENDAR ══════════════════════════════════════════════════
+function renderCalendar(){
+  const db=DB.get();
+  const today=new Date();
+  const upcoming=(db.tests||[]).filter(t=>t.nextDate&&new Date(t.nextDate)>today)
+    .sort((a,b)=>new Date(a.nextDate)-new Date(b.nextDate));
+  const calEl=document.getElementById('cal-upcoming');
+  calEl.innerHTML=upcoming.length?upcoming.map(t=>{
+    const a=db.athletes.find(x=>x.id===t.athleteId)||{};
+    const nd=new Date(t.nextDate);
+    const diff=Math.ceil((nd-today)/(1000*60*60*24));
+    const mo=MOMENTS[t.moment]||MOMENTS.pre;
+    return`<div class="cal-event" style="border-color:${mo.color};margin-bottom:8px">
+      <div style="min-width:44px;text-align:center">
+        <div class="cal-date" style="color:${mo.color}">${nd.getDate()}</div>
+        <div class="cal-month">${nd.toLocaleString('es',{month:'short',year:'2-digit'})}</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px">${a.firstName||''} ${a.lastName||''}</div>
+        <div style="font-size:11px;color:var(--g3)">${DEVICES[t.device]?.label||t.device} · ${t.testType}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:${diff<=7?'#F59E0B':'var(--g3)'};font-weight:${diff<=7?700:400}">en ${diff}d</div>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty" style="padding:24px"><div class="empty-icon" style="font-size:28px">✅</div><div class="empty-sub">Sin testeos agendados</div></div>';
+
+  // History by month
+  const byMonth={};
+  (db.tests||[]).forEach(t=>{
+    const key=new Date(t.date).toLocaleString('es',{month:'long',year:'numeric'});
+    if(!byMonth[key])byMonth[key]=0;
+    byMonth[key]++;
+  });
+  const histEl=document.getElementById('cal-history');
+  histEl.innerHTML=Object.entries(byMonth).slice(0,8).map(([m,c])=>
+    `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--dk3);border-radius:var(--r8);margin-bottom:6px">
+      <span style="font-size:12px;color:var(--g2);text-transform:capitalize">${m}</span>
+      <span style="font-family:var(--fd);font-size:18px;font-weight:800;color:var(--o)">${c}</span>
+    </div>`
+  ).join('')||'<div style="color:var(--g3);font-size:12px;text-align:center;padding:20px">Sin historial</div>';
+}
+function syncCalendar(){
+  const upcoming=(DB.get().tests||[]).filter(t=>t.nextDate&&new Date(t.nextDate)>new Date())
+    .sort((a,b)=>new Date(a.nextDate)-new Date(b.nextDate)).slice(0,1)[0];
+  if(!upcoming){alert('No hay testeos agendados para sincronizar.');return;}
+  const db=DB.get();
+  const a=db.athletes.find(x=>x.id===upcoming.athleteId)||{};
+  const d=new Date(upcoming.nextDate);
+  const title=`VBP Test: ${a.firstName} ${a.lastName} — ${DEVICES[upcoming.device]?.label} ${upcoming.testType}`;
+  const start=d.toISOString().replace(/-|:|\.\d{3}/g,'').slice(0,15)+'Z';
+  const end=new Date(d.getTime()+3600000).toISOString().replace(/-|:|\.\d{3}/g,'').slice(0,15)+'Z';
+  const url=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent('Testeo VBP Athletes Performance')}&sf=true&output=xml`;
+  window.open(url,'_blank');
+}
+
+// ══ NORMS PANEL ══════════════════════════════════════════════
+function renderNorms(){
+  var sports = Object.entries(SPORTS);
+  var tabs = '<div class="tabs" style="margin-bottom:20px;flex-wrap:wrap">';
+  sports.forEach(function(entry){
+    var k=entry[0], v=entry[1];
+    var isActive = k==='football' ? ' active' : '';
+    tabs += '<div class="tab'+isActive+'" onclick="showNormSport(\'' + k + '\',this)">' + v.icon + ' ' + v.label + '</div>';
+  });
+  tabs += '</div><div id="norm-sport-content"></div>';
+  document.getElementById('norms-content').innerHTML = tabs;
+  showNormSport('football', document.querySelector('#norms-content .tab'));
+}
+const NORM_SOURCES = {
+  football:   'VALD EPL 2025/26 (N>150.000 tests · 19 clubes)',
+  rugby:      'McMahon et al. 2022 Sensors + VALD AFL/NRL 2023 (N>3.000)',
+  basketball: 'VALD NBA 2020/21 (N>3.000) + Berberet/McMahon 2024 NCAA D1 (N=96)',
+  volleyball: 'Cabarkapa 2024 Frontiers + Pawlik 2023 Sci Reports + Sanders 2024',
+  hockey:     'Literatura team sports / field hockey (estimado)',
+  handball:   'Radovic/Cabarkapa 2024 Frontiers Sports + Krüger handball professional',
+  boxing:     'Combat sports literature / estimado',
+  tennis:     'Literatura ITF/ATP nivel élite (estimado)',
+  other:      'Estimación general team sports',
+};
+function showNormSport(sport, el) {
+  document.querySelectorAll('#norms-content .tab').forEach(function(t){ t.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  var source = NORM_SOURCES[sport] || 'Literatura general';
+  var metrics = Object.entries(NORMS).filter(function(entry){ var n=entry[1]; return n[sport] || n.football; });
+  var rows = metrics.map(function(entry) {
+    var name = entry[0], n = entry[1];
+    var arr = n[sport] || n.football;
+    var isSpecific = !!n[sport];
+    var noteIcon = n.note ? '<span title="'+n.note+'" style="cursor:help;color:var(--g3);margin-left:4px">ⓘ</span>' : '';
+    return '<tr>' +
+      '<td style="color:var(--w);font-weight:500">'+name+noteIcon+'</td>' +
+      '<td style="color:var(--g3)">'+(n.unit||'—')+'</td>' +
+      '<td>'+arr[0]+'</td><td>'+arr[1]+'</td>' +
+      '<td style="color:var(--o);font-weight:700">'+arr[2]+'</td>' +
+      '<td>'+arr[3]+'</td><td>'+arr[4]+'</td>' +
+      '<td style="font-size:10px"><span style="color:'+(isSpecific?'var(--gr)':'var(--ye)')+'">'+
+        (isSpecific?'✓ Específico':'~ Referenciado')+'</span></td>' +
+      '</tr>';
+  }).join('');
+  var content =
+    '<div class="alert alert-info" style="margin-bottom:14px;font-size:11px">' +
+      '<strong>Fuente:</strong> ' + source +
+    '</div>' +
+    '<div class="card" style="padding:0;overflow:hidden">' +
+      '<table class="htable">' +
+        '<thead><tr><th>Métrica</th><th>Unidad</th><th>P5</th><th>P25</th>' +
+        '<th style="color:var(--o)">P50</th><th>P75</th><th>P95</th><th>Datos</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+    '</div>';
+  document.getElementById('norm-sport-content').innerHTML = content;
+}
+
+// ══ SETTINGS ══════════════════════════════════════════════════
+function loadSettings(){
+  const s=DB.get().settings||{};
+  document.getElementById('set-coach-name').value=s.coachName||'';
+  document.getElementById('set-org').value=s.org||'VBP Athletic Performance';
+  document.getElementById('set-email').value=s.email||'';
+}
+function saveSettings(){
+  const db=DB.get();
+  db.settings={coachName:document.getElementById('set-coach-name').value,org:document.getElementById('set-org').value,email:document.getElementById('set-email').value};
+  DB.commit();
+  showToast('Ajustes guardados ✓');
+}
+
+// ══ EXPORT / IMPORT ══════════════════════════════════════════
+function exportData(){
+  const data=DB.get();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`vbp_data_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+function importData(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.athletes)throw new Error('Formato inválido');
+      if(!confirm(`Importar ${data.athletes.length} atletas y ${data.tests?.length||0} testeos? Esto reemplazará los datos actuales.`))return;
+      DB._d=data;DB.commit();
+      showToast('Datos importados ✓');
+      nav('dashboard');
+    }catch(err){alert('Error al importar: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+function clearAllData(){
+  if(!confirm('¿Borrar TODOS los datos? Esta acción no se puede deshacer.'))return;
+  localStorage.removeItem('vbp_db');
+  DB._d=null;
+  showToast('Datos eliminados');
+  nav('dashboard');
+}
+
+// ══ PDF REPORT ════════════════════════════════════════════════
+function printReport(){
+  const testId=window._currentTestId;
+  if(!testId)return;
+  const db=DB.get();
+  const t=db.tests.find(x=>x.id===testId);
+  const a=db.athletes.find(x=>x.id===t?.athleteId)||{};
+  const dev=DEVICES[t?.device]||{};
+  const mo=MOMENTS[t?.moment]||MOMENTS.pre;
+  const sp=SPORTS[a.sport]||SPORTS.other;
+  const s=db.settings||{};
+  const sport=a.sport||'football';
+  const metricsHTML=(t?.metrics||[]).map(m=>{
+    const n=lookupNormByName(m.name,sport);
+    let pct='—',bar='';
+    if(n){
+      const r=calcPct(m.value,n.norms,n.higher);
+      if(r){
+        pct=r.label;
+        const [p5,p25,p50,p75,p95]=n.norms;
+        bar=`<div style="margin-top:6px">
+          <div style="display:flex;justify-content:space-between;font-size:8px;color:#666;margin-bottom:2px">
+            <span>P5:${p5}</span><span>P25:${p25}</span><span>P50:${p50}</span><span>P75:${p75}</span><span>P95:${p95}</span>
+          </div>
+          <div style="height:8px;background:#eee;border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${r.rank}%;background:${r.color};border-radius:4px"></div>
+          </div>
+        </div>`;
+      }
+    }
+    return`<tr>
+      <td style="padding:8px 10px;border-bottom:1px solid #f0f0f0;font-weight:600">${m.name}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #f0f0f0;text-align:center;font-size:16px;font-weight:800">${m.value} ${m.unit||''}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #f0f0f0;text-align:center"><span style="background:#f5f5f5;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">${pct}</span></td>
+      <td style="padding:8px 10px;border-bottom:1px solid #f0f0f0">${bar}</td>
+    </tr>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>VBP Report</title>
+  <style>body{font-family:Inter,Arial,sans-serif;color:#111;padding:0;margin:0}
+  .header{background:#0A0C0F;color:#fff;padding:24px 32px;display:flex;justify-content:space-between;align-items:center}
+  .logo{font-family:Arial;font-size:28px;font-weight:900;color:#FF6B1A;letter-spacing:1px}
+  .org{font-size:11px;color:#888;margin-top:2px}
+  .body{padding:28px 32px}
+  .hero{border:2px solid #FF6B1A;border-radius:10px;padding:18px 22px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center}
+  .name{font-size:28px;font-weight:900;text-transform:uppercase}
+  .ac{color:#FF6B1A}
+  .meta{font-size:12px;color:#666;margin-top:5px}
+  table{width:100%;border-collapse:collapse}
+  th{background:#f5f5f5;padding:8px 10px;text-align:left;font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px}
+  @media print{@page{margin:15mm}}
+  </style></head><body>
+  <div class="header">
+    <div><div class="logo">VBP</div><div class="org">${s.org||'VBP Athletic Performance'} · ${s.coachName||'Coach'}</div></div>
+    <div style="text-align:right;font-size:11px;color:#888">Reporte Generado<br>${new Date().toLocaleDateString('es',{day:'2-digit',month:'long',year:'numeric'})}</div>
+  </div>
+  <div class="body">
+    <div class="hero">
+      <div>
+        <div class="name">${a.firstName} <span class="ac">${a.lastName}</span></div>
+        <div class="meta">${sp.icon} ${sp.label} ${a.position?'· '+a.position:''} ${a.club?'· '+a.club:''} ${a.bm?'· '+a.bm+' kg':''}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;color:#888">Fecha del testeo</div>
+        <div style="font-size:18px;font-weight:800">${new Date(t.date).toLocaleDateString('es',{day:'2-digit',month:'long',year:'numeric'})}</div>
+        <div style="font-size:12px;margin-top:4px;font-weight:700;color:${mo.color}">${mo.label}</div>
+      </div>
+    </div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:#FF6B1A">${dev.icon||''} ${dev.label||t?.device} — ${t?.testType}</div>
+    <table>
+      <thead><tr><th>Métrica</th><th>Valor</th><th>Percentil</th><th>Posición Normativa</th></tr></thead>
+      <tbody>${metricsHTML}</tbody>
+    </table>
+    <div style="margin-top:22px;padding:12px 16px;background:#f9f9f9;border-radius:8px;font-size:11px;color:#888;border-left:3px solid #FF6B1A">
+      Referencia normativa: VALD EPL 2025/26 (>150.000 tests · 19 clubes) para fútbol. Literatura científica para otros deportes.
+      ${t?.notes?`<br>Notas: ${t.notes}`:''}
+    </div>
+  </div></body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+
+// ══ TOAST ════════════════════════════════════════════════════
+function showToast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#FF6B1A;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;animation:fadein .2s';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+}
+
+// ══ PRESCRIPTION PANEL ══════════════════════════════════════════
+function initPrescriptionPanel(data={}) {
+  const db = DB.get();
+  const sel = document.getElementById('presc-athlete-select');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Seleccionar atleta…</option>';
+  (db.athletes||[]).forEach(a => {
+    const sp = SPORTS[a.sport]||SPORTS.other;
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = `${a.firstName} ${a.lastName} (${sp.icon} ${sp.label})`;
+    if (data.athleteId === a.id) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  if (data.athleteId) loadPrescription(data.athleteId);
+}
+function loadPrescription(athleteId) {
+  if (!athleteId) {
+    document.getElementById('prescription-content').innerHTML = `<div class="empty"><div class="empty-icon">🎯</div><div class="empty-title">Seleccioná un atleta</div><div class="empty-sub">Elegí un atleta para ver las recomendaciones basadas en sus testeos.</div></div>`;
+    return;
+  }
+  renderPrescription(athleteId);
+}
+
+// ══ INIT ════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  renderDashboard();
+  // Demo data if empty
+  const db=DB.get();
+  if(!db.athletes?.length){
+    db.athletes=[
+      {id:'demo1',firstName:'Martina',lastName:'Stepanovitch',sport:'football',position:'Delantera',bm:'62',height:'165',moment:'pre',club:'Club Atlético Demo',dob:'2001-03-15',notes:'Ex lesión tobillo derecho. Buena recuperación.',createdAt:new Date().toISOString()},
+      {id:'demo2',firstName:'Santino',lastName:'Micciullo',sport:'football',position:'Mediocampista',bm:'74',height:'176',moment:'in',club:'Club Atlético Demo',dob:'1999-08-22',notes:'',createdAt:new Date().toISOString()},
+      {id:'demo3',firstName:'Lucas',lastName:'Benítez',sport:'boxing',position:'Peso Ligero',bm:'60',height:'170',moment:'pre',club:'',dob:'2000-05-10',notes:'Preparación para competencia agosto',createdAt:new Date().toISOString()},
+    ];
+    db.seq=10;
+    DB.commit();
+    renderDashboard();
+  }
+});
+
+// ════════════════════════════════════════════════════════════════
+// VBP REFERENCE LIBRARY
+// ════════════════════════════════════════════════════════════════
+
+const REFERENCES = [
+  {id:"vald_epl_2526",title:"VALD Normative Data Report — 2025/26 Premier League Report",authors:"Williams, M. & Cohen, D.",org:"VALD Performance",year:2026,sport:"football",device:["forcedecks","forceframe","nordbord"],type:"vald",n:"Más de 150.000 tests · 19 clubes EPL",summary:"El dataset de placa de fuerza más grande de la Premier League. CMJ completo (performance + asimetría), SJ, DJ, SLDJ, Hop Test, IMTP, Squat Assessment, NordBord y ForceFrame. Principal fuente normativa para fútbol en VBP.",metrics:["CMJ","SJ","DJ","SLDJ","Hop Test","IMTP","NordBord","ForceFrame Hip ABD/ADD","Tobillo"],url:"https://valdperformance.com/hub",urlLabel:"Acceder en VALD Hub",badge:"★ VALD Oficial",badgeColor:"#FF6B1A"},
+  {id:"vald_epl_2425",title:"VALD Normative Data Report — 2024/25 Premier League Report",authors:"Williams, M. & Cohen, D.",org:"VALD Performance",year:2025,sport:"football",device:["forcedecks","forceframe","nordbord"],type:"vald",n:"Más de 120.000 tests · 19 clubes EPL",summary:"Informe de la temporada previa. Base de comparación longitudinal para fútbol de élite. Disponible en VALD Hub para clientes.",metrics:["CMJ","SJ","IMTP","NordBord","ForceFrame"],url:"https://valdperformance.com/hub",urlLabel:"Acceder en VALD Hub",badge:"★ VALD Oficial",badgeColor:"#FF6B1A"},
+  {id:"vald_basketball_2425",title:"VALD Normative Data Report — 2024/25 Basketball Report",authors:"VALD Data Science Team",org:"VALD Performance",year:2025,sport:"basketball",device:["forcedecks"],type:"vald",n:"NBA + NCAA D1 élite",summary:"Datos normativos de básquet profesional y universitario élite (NCAA D1). Incluye CMJ, Drop Jump y métricas de asimetría. Disponible en VALD Hub.",metrics:["CMJ","DJ","Asimetría"],url:"https://valdperformance.com/hub",urlLabel:"Acceder en VALD Hub",badge:"★ VALD Oficial",badgeColor:"#FF6B1A"},
+  {id:"vald_nfl_2425",title:"VALD Normative Data Report — 2024/25 NFL and NCAA Football Report",authors:"VALD Data Science Team",org:"VALD Performance",year:2025,sport:"football",device:["forcedecks"],type:"vald",n:"NFL + NCAA D1 fútbol americano",summary:"Datos normativos de fútbol americano profesional y universitario. CMJ, IMTP y métricas derivadas. Referencia comparativa para potencia de miembros inferiores en deportes de colisión.",metrics:["CMJ","IMTP","DSI"],url:"https://valdperformance.com/hub",urlLabel:"Acceder en VALD Hub",badge:"★ VALD Oficial",badgeColor:"#FF6B1A"},
+  {id:"vald_nhl_2425",title:"VALD Normative Data Report — 2024/25 NHL Report",authors:"VALD Data Science Team",org:"VALD Performance",year:2025,sport:"general",device:["forcedecks"],type:"vald",n:"NHL profesional",summary:"Datos normativos de hockey sobre hielo profesional (NHL). Referencia comparativa para deportes de potencia en espacios reducidos.",metrics:["CMJ","DJ"],url:"https://valdperformance.com/hub",urlLabel:"Acceder en VALD Hub",badge:"★ VALD Oficial",badgeColor:"#FF6B1A"},
+  {id:"vald_nrl_afl_2023",title:"AFL vs NRL: 2023 Jump Performance — Normative Data Update",authors:"VALD Data Science Team",org:"VALD Performance",year:2023,sport:"rugby",device:["forcedecks"],type:"vald",n:"Más de 3.000 CMJ y DJ tests (todos los equipos NRL y AFL)",summary:"Normas actualizadas para NRL y AFL australiana. CMJ: altura, RSI-Mod, FT:CT, potencia relativa. Drop Jump: RSI, potencia. La NRL muestra mayor RSI y potencia DJ vs AFL.",metrics:["CMJ Altura","RSI-Mod","FT:CT","Pot. Pico CMJ","RSI DJ"],url:"https://valdperformance.com/news/updates-on-jump-performance",urlLabel:"Leer en valdperformance.com",badge:"★ VALD Oficial",badgeColor:"#FF6B1A"},
+  {id:"vald_nba_2021",title:"NBA Season 2020-21: Countermovement Jump Results",authors:"VALD Data Science Team",org:"VALD Performance",year:2021,sport:"basketball",device:["forcedecks"],type:"vald",n:"Más de 3.000 CMJ tests (toda la liga NBA 2020-21)",summary:"Mediana NBA: 46 cm. Máximo: 66 cm. RSI-Mod máximo: 1.13. Potencia relativa Este=66 W/kg, Oeste=64 W/kg. Principal referencia normativa NBA en VBP.",metrics:["CMJ Altura","Pot. Pico CMJ","RSI-Mod"],url:"https://valdperformance.com/news/nba-season-2020-2021-countermovement-jump-results",urlLabel:"Leer en valdperformance.com",badge:"★ VALD Oficial",badgeColor:"#FF6B1A"},
+  {id:"vald_hamstring",title:"Research Normative Data Report — Hamstring Strain",authors:"VALD Research Team",org:"VALD Performance",year:2026,sport:"general",device:["nordbord","forcedecks"],type:"vald",n:"Población clínica + deportiva",summary:"Datos normativos para lesión de isquiotibiales. Útil para protocolos RTP. Incluye NordBord y CMJ en distintas etapas de rehabilitación.",metrics:["NordBord","CMJ"],url:"https://valdperformance.com/hub",urlLabel:"Acceder en VALD Hub",badge:"★ VALD Research",badgeColor:"#8B5CF6"},
+  {id:"vald_acl",title:"Research Normative Data Report — ACL",authors:"VALD Research Team",org:"VALD Performance",year:2026,sport:"general",device:["forcedecks","forceframe"],type:"vald",n:"Población post-ACLR",summary:"Referencia normativa post-reconstrucción de LCA. SLDJ, CMJ, asimetría y ForceFrame en distintas fases de rehabilitación.",metrics:["CMJ Asimetría","SLDJ","ForceFrame"],url:"https://valdperformance.com/hub",urlLabel:"Acceder en VALD Hub",badge:"★ VALD Research",badgeColor:"#8B5CF6"},
+  {id:"vald_groin",title:"Research Normative Data Report — Adductor-Related Groin Pain",authors:"VALD Research Team",org:"VALD Performance",year:2026,sport:"football",device:["forceframe"],type:"vald",n:"Población con dolor inguinal relacionado a aductores",summary:"Datos normativos ForceFrame ADD/ABD para dolor inguinal. Fundamental para criterios RTP y asimetría tolerable.",metrics:["ForceFrame ADD","ForceFrame ABD","ADD:ABD Ratio"],url:"https://valdperformance.com/hub",urlLabel:"Acceder en VALD Hub",badge:"★ VALD Research",badgeColor:"#8B5CF6"},
+  {id:"vald_hip",title:"Research Normative Data Report — The Footballer Hip",authors:"VALD Research Team",org:"VALD Performance",year:2026,sport:"football",device:["forceframe"],type:"vald",n:"Futbolistas con patología de cadera",summary:"Normas ForceFrame en patología de cadera en fútbol. Rangos ADD/ABD y ratios en proceso de rehabilitación.",metrics:["ForceFrame Hip Flex","ForceFrame ADD","ForceFrame ABD"],url:"https://valdperformance.com/hub",urlLabel:"Acceder en VALD Hub",badge:"★ VALD Research",badgeColor:"#8B5CF6"},
+  {id:"mcmahon_2022_rugby",title:"Force Plate-Derived CMJ Normative Data and Benchmarks for Professional Rugby League Players",authors:"McMahon, J.J., Ripley, N.J. & Comfort, P.",org:"University of Salford — Edith Cowan University",year:2022,sport:"rugby",device:["forcedecks"],type:"paper",journal:"Sensors, 22(22), 8669",doi:"10.3390/s22228669",n:"N=121 jugadores RL profesionales (66 forwards / 55 backs)",summary:"Estudio pionero en normas CMJ por placa de fuerza para rugby league profesional. Percentiles para altura, RSI-Mod y jump momentum por posición. Usa ForceDecks.",metrics:["CMJ Altura","RSI-Mod","Jump Momentum"],url:"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9696698/",urlLabel:"Leer paper (Open Access)",badge:"Peer-Reviewed",badgeColor:"#3B82F6"},
+  {id:"berberet_2024_basketball",title:"Force Plate-Derived CMJ Normative Reference Values — NCAA Division-I Power Five Men Basketball Teams",authors:"Berberet, D., Petway, A., Bell, K., Gillen, Z., Mundy, P., McMahon, J.J. et al.",org:"NCAA Division I — Multiple Universities",year:2024,sport:"basketball",device:["forcedecks"],type:"paper",journal:"International Journal of Strength and Conditioning, 4(1)",doi:"10.47206/ijsc.v4i1.354",n:"N=96 jugadores NCAA D1 (7 equipos, pretemporada 2023-24)",summary:"Primera referencia normativa CMJ por placa de fuerza para básquet universitario élite. Guards mayor altura y RSI que forwards. 38 métricas CMJ con percentiles y T-scores.",metrics:["CMJ Altura","RSI-Mod","FT:CT","Pot. Pico CMJ","Impulso Concéntrico"],url:"https://journal.iusca.org/index.php/Journal/article/view/354",urlLabel:"Leer paper (Open Access)",badge:"Peer-Reviewed",badgeColor:"#3B82F6"},
+  {id:"cabarkapa_2024_volleyball",title:"Starters vs. Non-Starters Differences in CMJ Force-Time Metrics in Female Professional Volleyball Players",authors:"Cabarkapa, D.V., Cabarkapa, D. & Fry, A.C.",org:"University of Kansas — Wu Tsai Human Performance Alliance",year:2024,sport:"volleyball",device:["forcedecks"],type:"paper",journal:"Frontiers in Sports and Active Living, 6, 1389001",doi:"10.3389/fspor.2024.1389001",n:"N=19 jugadoras European SuperLeague profesional",summary:"CMJ por placa de fuerza en vóley profesional femenino europeo. RSI-Mod fue el principal diferenciador entre titulares y suplentes. Incluye 12+ métricas con estadísticas descriptivas.",metrics:["CMJ Altura","RSI-Mod","FT:CT","Impulso Frenado","Pot. Pico"],url:"https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2024.1389001/full",urlLabel:"Leer paper (Open Access)",badge:"Peer-Reviewed",badgeColor:"#3B82F6"},
+  {id:"pawlik_2023_volleyball",title:"Influence of Jump Height on the Game Efficiency in Elite Volleyball Players",authors:"Pawlik, D. & Mroczek, D.",org:"Poland — Scientific Reports (Nature)",year:2023,sport:"volleyball",device:["general"],type:"paper",journal:"Scientific Reports, 13, 8931",doi:"10.1038/s41598-023-35729-w",n:"División I masculino: CMJ=45.3±4.9cm; SJ=40.8±5.6cm",summary:"Comparación de alturas de salto entre divisiones en vóley élite. División I hombres: CMJ 45.3cm, SJ 40.8cm. Referencia para rangos normativos en vóley masculino élite.",metrics:["CMJ Altura","SJ Altura"],url:"https://www.nature.com/articles/s41598-023-35729-w",urlLabel:"Leer paper (Open Access)",badge:"Peer-Reviewed",badgeColor:"#3B82F6"},
+  {id:"sanders_2024_volleyball",title:"Positional Differences in Jump Loads and Force-Velocity Metrics Throughout a 16-Week D1 Volleyball Season",authors:"Sanders et al.",org:"Translational Sports Medicine / Wiley",year:2024,sport:"volleyball",device:["forcedecks"],type:"paper",journal:"Translational Sports Medicine, 2024, 5933923",doi:"10.1155/tsm2/5933923",n:"N=12 atletas D1 femenino · 16 semanas de seguimiento",summary:"CMJ por posición en vóley D1 femenino. Middle blockers: mayor altura (36.1±6.4cm), mayor profundidad CM (-41.7cm) y mayor velocidad propulsión. Datos por posición y momento de temporada.",metrics:["CMJ Altura","Profundidad CM","Vel. Propulsión","Fuerza Frenado"],url:"https://onlinelibrary.wiley.com/doi/abs/10.1155/tsm2/5933923",urlLabel:"Ver en Wiley",badge:"Peer-Reviewed",badgeColor:"#3B82F6"},
+  {id:"radovic_2024_handball",title:"Vertical Jump Neuromuscular Performance of Professional Female Handball Players — Starters vs. Non-Starters",authors:"Radovic, K., Cabarkapa, D., Aleksic, J., Cabarkapa, D.V., Mirkov, D.M. et al.",org:"Frontiers in Sports and Active Living",year:2024,sport:"handball",device:["forcedecks"],type:"paper",journal:"Frontiers in Sports and Active Living, 6, 1407601",doi:"10.3389/fspor.2024.1407601",n:"Jugadoras profesionales femeninas handball élite",summary:"Primer estudio específico de métricas CMJ por placa de fuerza en handball profesional femenino. Estadísticas descriptivas completas para altura, RSI-Mod, impulsos y estrategia de salto. Principal fuente normativa para handball en VBP.",metrics:["CMJ Altura","RSI-Mod","FT:CT","Impulso Frenado","Pot. Pico"],url:"https://www.frontiersin.org/journals/sports-and-active-living",urlLabel:"Buscar en Frontiers",badge:"Peer-Reviewed",badgeColor:"#3B82F6"},
+  {id:"cabarkapa_2023_nba",title:"Starters vs. Non-Starters Differences in CMJ Force-Time Metrics in Professional Male Basketball Players",authors:"Cabarkapa, D., Philipp, N.M., Eserhaut, D.A., Cabarkapa, D.V. & Fry, A.C.",org:"Frontiers in Sports and Active Living",year:2023,sport:"basketball",device:["forcedecks"],type:"paper",journal:"Frontiers in Sports and Active Living, 5, 1327379",doi:"10.3389/fspor.2023.1327379",n:"NBA profesional — titulares vs suplentes",summary:"Diferencias CMJ entre titulares y suplentes NBA. Titulares: mayor RSI-Mod y RFD excéntrico. Datos descriptivos de CMJ para básquet profesional masculino élite.",metrics:["CMJ Altura","RSI-Mod","RFD Exc.","Impulso Frenado"],url:"https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2023.1327379/full",urlLabel:"Leer paper (Open Access)",badge:"Peer-Reviewed",badgeColor:"#3B82F6"},
+  {id:"kotsifaki_2023_football",title:"Single Leg Vertical Jump Performance Identifies Knee Function Deficits at Return to Sport After ACL Reconstruction",authors:"Kotsifaki, A. et al.",org:"Aspetar Orthopaedic and Sports Medicine Hospital",year:2023,sport:"football",device:["forcedecks"],type:"paper",journal:"British Journal of Sports Medicine",doi:"10.1136/bjsports-2021-105003",n:"N=532 futbolistas profesionales saludables (Aspetar healthy cohort)",summary:"Fuente comparativa para profesionales de fútbol no-EPL. Mediana CMJ ~35cm — la EPL la supera en +12%. Usada en el informe VALD 2025/26 como benchmark base.",metrics:["CMJ Altura","SLDJ","Asimetría"],url:"https://bjsm.bmj.com/",urlLabel:"Buscar en BJSM",badge:"Peer-Reviewed",badgeColor:"#3B82F6"},
+  {id:"mcmahon_2025_efl",title:"Normative Data and Benchmarks for Force Plate Tests in Professional and Youth Soccer Players — English Football League",authors:"McMahon, J.J. et al.",org:"University of Salford",year:2025,sport:"football",device:["forcedecks"],type:"paper",journal:"Journal of Sports Sciences, 2025",doi:"10.1080/02640414.2025.2523671",n:"N=139 profesionales EFL + jugadores juveniles",summary:"Normas CMJ, CMRJ e IMTP para fútbol profesional EFL y juvenil. Profesionales: IMTP F. Pico=3031N, F relativa=37.4 N/kg. 25/32 métricas CMJ diferencian entre grupos.",metrics:["CMJ","IMTP","CMRJ"],url:"https://www.tandfonline.com/doi/full/10.1080/02640414.2025.2523671",urlLabel:"Ver en Taylor & Francis",badge:"Peer-Reviewed",badgeColor:"#3B82F6"},
+  {id:"sheppard_2011_dsi",title:"Dynamic Strength Index: Evaluation and Training Recommendations",authors:"Sheppard, J.M. et al.",org:"Australian Institute of Sport",year:2011,sport:"general",device:["forcedecks"],type:"paper",journal:"Journal of Strength and Conditioning Research",doi:"10.1519/JSC.0b013e318196b1f3",n:"Referencia metodológica",summary:"Establece recomendaciones de entrenamiento según rangos DSI: menor a 0.60 = balístico; 0.60-0.80 = mixto; mayor a 0.80 = fuerza máxima. Citado en el informe VALD EPL 2025/26.",metrics:["DSI"],url:"https://journals.lww.com/nsca-jscr/",urlLabel:"Ver en JSCR",badge:"Metodológico",badgeColor:"#10B981"},
+];
+
+// ── RENDER LIBRARY ─────────────────────────────────────────────
+let libFilter = '';
+let libSportFilter = '';
+
+function renderLibrary() {
+  renderLibraryGrid();
+}
+
+function filterLibrary(val) {
+  libFilter = val.toLowerCase();
+  renderLibraryGrid();
+}
+
+function filterLibraryBySport(val) {
+  libSportFilter = val;
+  renderLibraryGrid();
+}
+
+function renderLibraryGrid() {
+  const container = document.getElementById('library-grid');
+  if (!container) return;
+
+  let refs = REFERENCES.filter(r => {
+    const matchSport = !libSportFilter || r.sport === libSportFilter;
+    const searchStr = (r.title + r.authors + r.summary + r.metrics.join(' ')).toLowerCase();
+    const matchSearch = !libFilter || searchStr.includes(libFilter);
+    return matchSport && matchSearch;
+  });
+
+  if (!refs.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Sin resultados</div><div class="empty-sub">Probá con otro término o deporte.</div></div>';
+    return;
+  }
+
+  // Group by type
+  const vald = refs.filter(r => r.type === 'vald');
+  const papers = refs.filter(r => r.type === 'paper');
+
+  let html = '';
+
+  if (vald.length) {
+    html += `<div class="sec-title" style="margin-bottom:14px;font-size:16px">★ <span class="ac">Reportes Oficiales VALD</span></div>`;
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-bottom:32px">';
+    vald.forEach(r => html += refCardHTML(r));
+    html += '</div>';
+  }
+
+  if (papers.length) {
+    html += `<div class="sec-title" style="margin-bottom:14px;font-size:16px">🔬 <span class="ac">Literatura Científica</span></div>`;
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px">';
+    papers.forEach(r => html += refCardHTML(r));
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+function refCardHTML(r) {
+  const sp = SPORTS[r.sport] || {icon:'🔬', label:'General', color:'var(--g3)'};
+  const devIcons = (r.device||[]).map(d => ({
+    forcedecks:'📊', forceframe:'💪', nordbord:'🔧', general:'📏'
+  }[d] || '📏')).join(' ');
+
+  return `<div class="card" style="border-top:3px solid ${r.badgeColor};position:relative;display:flex;flex-direction:column;gap:0">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
+      <span style="background:${r.badgeColor}22;color:${r.badgeColor};font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap;flex-shrink:0">${r.badge}</span>
+      <span style="font-size:11px;color:var(--g3)">${sp.icon} ${sp.label} · ${r.year}</span>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:var(--w);line-height:1.4;margin-bottom:6px">${r.title}</div>
+    <div style="font-size:11px;color:var(--o);margin-bottom:4px;font-weight:500">${r.authors}</div>
+    <div style="font-size:11px;color:var(--g3);margin-bottom:8px">${r.journal||r.org}${r.doi?` · DOI: ${r.doi}`:''}</div>
+    ${r.n ? `<div style="font-size:10px;color:var(--g3);margin-bottom:8px;padding:5px 8px;background:var(--dk3);border-radius:5px">👥 <strong style="color:var(--g2)">Muestra:</strong> ${r.n}</div>` : ''}
+    <div style="font-size:12px;color:var(--g2);line-height:1.6;margin-bottom:10px;flex:1">${r.summary}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">
+      ${r.metrics.map(m=>`<span style="background:var(--dk3);color:var(--g3);font-size:10px;padding:2px 7px;border-radius:4px">${m}</span>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--bdr2)">
+      <a href="${r.url}" target="_blank" style="flex:1" onclick="event.stopPropagation()">
+        <button class="btn btn-primary btn-sm" style="width:100%">🔗 ${r.urlLabel}</button>
+      </a>
+      ${r.doi ? `<a href="https://doi.org/${r.doi}" target="_blank" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm">DOI</button></a>` : ''}
+    </div>
+  </div>`;
+}
+
+</script>
+</body>
+</html>
+
+<!-- PRESCRIPCION MODULE - injected -->
+<script>
+// ════════════════════════════════════════════════════════════════
+// VBP PRESCRIPTION ENGINE
+// Lee los testeos del atleta, evalúa percentiles, determina
+// prioridades de entrenamiento y genera recomendaciones por
+// deporte + momento de temporada.
+// ════════════════════════════════════════════════════════════════
+
+// ── CUALIDADES CLAVE Y SUS MÉTRICAS INDICADORAS ─────────────────
+const QUALITIES = {
+  fuerza_max: {
+    label: 'Fuerza Máxima',
+    icon: '🏋️',
+    color: '#EF4444',
+    metrics: ['F. Pico IMTP','F. Pico IMTP / MC','F. Nórdico','Torque Nórdico','F. Iso Rodilla','ABD 45°','ADD 45°','ABD 60°','ADD 60°','F. Plantar Tobillo'],
+    desc_coach: 'Capacidad de producir fuerza máxima en condiciones isométricas y balísticas. Base de toda la cadena de potencia.',
+    desc_atleta: 'Tu capacidad de generar la mayor fuerza posible. Es la base para saltar más alto, correr más rápido y cambiar de dirección con potencia.',
+  },
+  potencia_excentrica: {
+    label: 'Potencia Excéntrica / SSC',
+    icon: '⚡',
+    color: '#FF6B1A',
+    metrics: ['Pot. Pico Exc.','Impulso Dec. Exc.','RFD Dec. Exc.','Vel. Pico Exc. CMJ','FT:CT','Profundidad CM'],
+    desc_coach: 'Capacidad de absorber y reutilizar energía elástica en el ciclo estiramiento-acortamiento. Principal diferenciador en atletas de élite.',
+    desc_atleta: 'Tu capacidad de "cargar el resorte" antes de saltar o acelerar. Los mejores atletas del mundo se distinguen más por esto que por la altura de salto.',
+  },
+  potencia_concentrica: {
+    label: 'Potencia Concéntrica',
+    icon: '💥',
+    color: '#F59E0B',
+    metrics: ['Pot. Pico CMJ','Impulso Concéntrico','Impulso Conc. 100ms','Pot. Pico SJ','Altura CMJ','Altura SJ'],
+    desc_coach: 'Capacidad de expresar fuerza en la fase propulsiva. Indicador de potencia de salida y transferencia al gesto deportivo.',
+    desc_atleta: 'Tu capacidad de explotar hacia arriba o hacia adelante. Determina qué tan alto saltás y qué tan fuerte acelerás.',
+  },
+  reactividad: {
+    label: 'Reactividad / Stiffness',
+    icon: '🐇',
+    color: '#10B981',
+    metrics: ['RSI DJ','RSI SLDJ','RSI Hop','Contacto DJ','Contacto SLDJ','Contacto Hop','Altura DJ','Altura SLDJ','Altura Hop'],
+    desc_coach: 'Rigidez musculotendinosa y capacidad reactiva. Fundamental para sprints, cambios de dirección y saltos repetidos.',
+    desc_atleta: 'Tu capacidad de rebotar rápido del suelo. Cuanto menos tiempo tardás en contacto con el piso y más alto llegás, mejor tu reactividad.',
+  },
+  velocidad: {
+    label: 'Velocidad Lineal',
+    icon: '🏃',
+    color: '#3B82F6',
+    metrics: ['10m','20m','30m','40m','Vmax'],
+    desc_coach: 'Velocidad de aceleración y máxima. Combina características neuromusculares de fuerza rápida y técnica de sprint.',
+    desc_atleta: 'Qué tan rápido acelerás y cuál es tu velocidad tope. Clave en todos los deportes de campo.',
+  },
+  cod: {
+    label: 'Cambio de Dirección',
+    icon: '↩️',
+    color: '#8B5CF6',
+    metrics: ['505 Test','T-Test','Illinois Test','Déficit COD','Asimetría 505'],
+    desc_coach: 'Capacidad de desacelerar, reorientar y reaccelerar. Incluye componentes de fuerza excéntrica, técnica y asimetría.',
+    desc_atleta: 'Qué tan rápido podés frenar y salir en otra dirección. Decisivo en deportes con oponentes y espacios reducidos.',
+  },
+  simetria: {
+    label: 'Simetría / Balance',
+    icon: '⚖️',
+    color: '#06B6D4',
+    metrics: ['Asimetría Nórdico','Asimetría Tobillo','Asimetría 505'],
+    desc_coach: 'Equilibrio entre hemicuerpos. Asimetrías >10–15% están asociadas a mayor riesgo de lesión.',
+    desc_atleta: 'El equilibrio entre tu pierna derecha e izquierda. Una gran diferencia entre ambas puede aumentar el riesgo de lesión.',
+  },
+};
+
+// ── EJERCICIOS POR CUALIDAD × DEPORTE × MOMENTO ─────────────────
+const EXERCISES = {
+  fuerza_max: {
+    off: {
+      football:  ['Sentadilla trasera 4×4–6 @80–90% 1RM','Romanian Deadlift 4×5','Hip thrust pesado 4×6','IMTP isométrico 4×5s','Sentadilla búlgara 3×6 c/u','Prensa de piernas pesada 4×8'],
+      rugby:     ['Sentadilla trasera 5×4 @85% 1RM','Peso muerto convencional 4×4','Hip thrust 4×6','Pull throughs pesados 4×8','Step up pesado 4×6 c/u'],
+      basketball:['Sentadilla goblet pesada 4×6','RDL bilateral 4×6','Prensa 45° 4×8','Hip thrust 4×6','Isométrico de rodilla 3×5s'],
+      volleyball:['Sentadilla trasera 4×5','RDL 4×6','Hip thrust pesado 4×6','Extensión de cadera en rack 4×8'],
+      boxing:    ['Sentadilla frontal 4×5','RDL 4×6','Press de hombros 4×6','Remo pesado 4×6','Dominadas con lastre 4×5'],
+      hockey:    ['Sentadilla trasera 4×5','Hip thrust pesado 4×6','Estocada pesada 4×6 c/u','RDL unilateral 3×6 c/u'],
+      other:     ['Sentadilla 4×5 @80%','Hip thrust 4×6','RDL 4×6','Isométrico general 4×5s'],
+    },
+    in: {
+      football:  ['Sentadilla 2×4 @80% (mantenimiento)','Hip thrust 2×6','RDL 2×5','IMTP isométrico 2×3s (activación)'],
+      rugby:     ['Sentadilla 2×4 @80%','Peso muerto 2×4','Hip thrust 2×5'],
+      basketball:['Sentadilla goblet 2×6','RDL 2×5','Prensa 2×8'],
+      volleyball:['Sentadilla 2×5','Hip thrust 2×6','RDL 2×5'],
+      boxing:    ['Sentadilla frontal 2×4','Remo 2×5','Dominadas 2×5'],
+      hockey:    ['Sentadilla 2×4','Hip thrust 2×5','Estocada 2×5 c/u'],
+      other:     ['Sentadilla 2×4 @80%','Hip thrust 2×5','RDL 2×5'],
+    },
+  },
+  potencia_excentrica: {
+    off: {
+      football:  ['Nórdico excéntrico 4×4 (progresión lenta)','Drop landing con carga 4×4','Frenado excéntrico en rampa 4×5','Salto a caja + absorción controlada 4×5','RDL excéntrico 4×4 (5s bajada)','Step down excéntrico 3×8 c/u'],
+      rugby:     ['Nórdico excéntrico 4×5','Drop landing pesado 4×4','Sentadilla excéntrica lenta 4×4 (5s)','Frenado horizontal 4×5m','Step down 3×8 c/u'],
+      basketball:['Nórdico excéntrico 3×5','Drop landing 4×5','Salto a caja + absorción 4×5','Sentadilla excéntrica 3×4 (4s)'],
+      volleyball:['Drop landing 4×5','Nórdico excéntrico 3×5','Sentadilla excéntrica lenta 4×4','Absorción monopodal desde caja 4×5 c/u'],
+      boxing:    ['Frenado en carrera 4×10m','Step down excéntrico 3×8 c/u','Lunge excéntrico 3×6 c/u','Bajada nórdica asistida 3×4'],
+      hockey:    ['Nórdico excéntrico 4×5','Drop landing 4×5','Estocada excéntrica lenta 3×5 c/u','Frenado en diagonal 4×5m'],
+      other:     ['Nórdico excéntrico 3×5','Drop landing 4×5','Sentadilla excéntrica lenta 3×4','Step down excéntrico 3×8'],
+    },
+    in: {
+      football:  ['Nórdico excéntrico 2×4 (mantenimiento)','Drop landing 2×5','Absorción monopodal desde caja 2×4 c/u'],
+      rugby:     ['Nórdico excéntrico 2×4','Drop landing 2×5','Frenado 2×5m'],
+      basketball:['Nórdico 2×4','Drop landing 2×5','Step down 2×6 c/u'],
+      volleyball:['Nórdico 2×4','Drop landing 2×5','Absorción monopodal 2×4 c/u'],
+      boxing:    ['Step down excéntrico 2×6 c/u','Frenado en carrera 2×10m'],
+      hockey:    ['Nórdico 2×4','Drop landing 2×5','Estocada excéntrica 2×4 c/u'],
+      other:     ['Nórdico 2×4','Drop landing 2×5','Step down 2×6 c/u'],
+    },
+  },
+  potencia_concentrica: {
+    off: {
+      football:  ['Salto vertical máximo 5×3','Cargada potencia 4×4','Jump squat 30% 1RM 5×4','Balón medicinal overhead throw 4×6','Sprint 0–20m con resistencia 5×1','Push press explosivo 4×4'],
+      rugby:     ['Jump squat 4×4','Cargada potencia 4×4','Sprint 0–10m 6×1','Lanzamiento balón medicinal 4×6','Salto vertical máximo 4×3'],
+      basketball:['Jump squat 4×4','Salto vertical máximo 5×3','Cargada potencia 3×4','Lanzamiento med ball desde pecho 4×6'],
+      volleyball:['Salto vertical máximo 5×4','Jump squat 4×4','Cargada potencia 3×4','Bloqueo con salto máximo 4×5'],
+      boxing:    ['Medicine ball rotacional throw 4×6','Jump squat 4×4','Swing pesado 4×6','Golpe explosivo con goma 4×10'],
+      hockey:    ['Jump squat 4×4','Sprint 0–15m 5×1','Salto lateral explosivo 4×5','Med ball slam 4×6'],
+      other:     ['Jump squat 4×4','Salto vertical máximo 4×3','Med ball slam 4×6','Sprint corto 5×1'],
+    },
+    in: {
+      football:  ['Jump squat 2×4 liviano','Salto vertical máximo 2×3','Sprint activación 3×20m'],
+      rugby:     ['Jump squat 2×4','Sprint 0–10m activación 3×1','Salto 2×3'],
+      basketball:['Salto vertical 2×4','Jump squat 2×3'],
+      volleyball:['Salto vertical máximo 2×5','Jump squat 2×3'],
+      boxing:    ['Med ball throw 2×6','Jump squat 2×3'],
+      hockey:    ['Jump squat 2×3','Sprint activación 3×1'],
+      other:     ['Jump squat 2×3','Salto vertical 2×4'],
+    },
+  },
+  reactividad: {
+    off: {
+      football:  ['Drop jump 5×6 (mínimo tiempo contacto)','Skipping A rápido 4×20m','Doble salto reactivo 4×5','Salto unipodal reactivo 4×5 c/u','Bounding 4×30m','Pliometría horizontal 4×6'],
+      rugby:     ['Drop jump 4×6','Skipping A 4×20m','Salto unipodal reactivo 4×5 c/u','Bounding 4×30m','Rebote rápido bilateral 4×8'],
+      basketball:['Drop jump 4×6','Salto unipodal reactivo 4×5 c/u','Rebote en aro con mínimo contacto 4×6','Pliometría lateral 4×5'],
+      volleyball:['Drop jump desde caja 4×6','Salto de bloqueo reactivo 4×5','Skipping A 4×20m','Pliometría unipodal 4×5 c/u'],
+      boxing:    ['Skipping rápido 4×20s','Salto a la soga reactivo 4×30s','Rebote en punta de pies 4×15','Drop jump 3×5'],
+      hockey:    ['Drop jump 4×6','Lateral bound reactivo 4×5 c/u','Skipping A 4×20m','Frenado + reaceleración 4×5m'],
+      other:     ['Drop jump 4×6','Skipping A 4×20m','Salto unipodal reactivo 3×5 c/u','Bounding 3×20m'],
+    },
+    in: {
+      football:  ['Drop jump 2×5 (activación)','Skipping A 2×20m','Rebote bilateral rápido 2×6'],
+      rugby:     ['Drop jump 2×5','Skipping 2×20m','Bounding corto 2×20m'],
+      basketball:['Drop jump 2×5','Salto reactivo 2×5'],
+      volleyball:['Drop jump 2×5','Salto bloqueo reactivo 2×5'],
+      boxing:    ['Soga reactiva 2×30s','Skipping rápido 2×20s'],
+      hockey:    ['Drop jump 2×5','Lateral bound 2×4 c/u'],
+      other:     ['Drop jump 2×5','Skipping 2×20m'],
+    },
+  },
+  velocidad: {
+    off: {
+      football:  ['Aceleración 0–10m 6×1 (máximo)','Sprint 0–30m 4×1 (máxima velocidad)','Sled push 15m 4×1','Sprint en cuesta 6×20m','Resistencia elástica 0–15m 4×1','Flying sprint 10m con entrada 20m 4×1'],
+      rugby:     ['Sprint 0–10m 8×1','Sprint 0–40m 4×1','Sled push 15m 4×1','Sprint en cuesta 6×20m','Aceleración con balón 4×20m'],
+      basketball:['Aceleración 0–10m 6×1','Sprint 0–20m 4×1','Sled push 10m 3×1','Sprint lateral 4×10m'],
+      volleyball:['Aceleración 0–6m 6×1','Sprint 0–15m 4×1','Desplazamiento lateral explosivo 4×5m'],
+      boxing:    ['Aceleración 0–10m 4×1','Sprint en cuesta 4×20m','Sprint con cambio de guardia 4×10m'],
+      hockey:    ['Aceleración 0–10m 6×1','Sprint 0–30m 4×1','Sprint en diagonal 4×20m','Sled push 10m 3×1'],
+      other:     ['Aceleración 0–10m 5×1','Sprint 0–20m 4×1','Sprint en cuesta 4×20m','Sled push 10m 3×1'],
+    },
+    in: {
+      football:  ['Aceleración activación 3×20m','Flying sprint 2×10m','Sprint técnico 3×10m'],
+      rugby:     ['Sprint activación 3×20m','Aceleración 3×10m'],
+      basketball:['Aceleración 3×10m','Sprint lateral 2×10m'],
+      volleyball:['Aceleración 3×6m','Desplazamiento lateral 2×5m'],
+      boxing:    ['Sprint activación 3×10m'],
+      hockey:    ['Aceleración 3×10m','Sprint diagonal 2×15m'],
+      other:     ['Aceleración 3×10m','Sprint activación 2×20m'],
+    },
+  },
+  cod: {
+    off: {
+      football:  ['505 Test progresivo 5×2 c/u','T-Test como entrenamiento 4 reps','Frenado + reaceleración 4×5m','COD con carga excéntrica previa 4×3 c/u','Illinois progresivo 3 reps','Shuffle + sprint 4×10m'],
+      rugby:     ['505 progresivo 4×2 c/u','Frenado + tackle + sprint 4×1','T-Test 3 reps','COD con contacto 3×3'],
+      basketball:['T-Test 4 reps','Shuffle + sprint 4×10m','Frenado + salto + sprint 4×3','COD en zona reducida 4×5'],
+      volleyball:['Frenado + reaceleración 4×5m','COD lateral 4×5 c/u','Shuffle rápido 4×10m'],
+      boxing:    ['Frenado + esquiva + contraataque 4×5','Shuffle explosivo 4×10m','T-Test modificado 3 reps'],
+      hockey:    ['505 progresivo 4×2 c/u','COD con palo 4×3','T-Test 4 reps','Frenado + pase + sprint 4×3'],
+      other:     ['505 progresivo 4×2 c/u','T-Test 4 reps','Frenado + reaceleración 4×5m','Shuffle + sprint 4×10m'],
+    },
+    in: {
+      football:  ['COD específico en juego reducido','505 técnico 2×2 c/u','Frenado + sprint corto 3×5m'],
+      rugby:     ['COD con contacto en espacio reducido','505 técnico 2×2 c/u'],
+      basketball:['COD en zona 3×5','Shuffle + sprint 2×10m'],
+      volleyball:['COD lateral 2×5 c/u','Frenado + salto 2×5'],
+      boxing:    ['Esquiva + contraataque en guantes 3×3min'],
+      hockey:    ['COD con palo en circuito 3×1','505 técnico 2×2 c/u'],
+      other:     ['COD técnico 2×3','Frenado + sprint 2×5m'],
+    },
+  },
+  simetria: {
+    off: {
+      football:  ['Sentadilla búlgara unilateral 4×8 c/u','RDL unilateral 4×8 c/u','Nórdico unilateral asistido 3×5','Step up controlado 4×8 c/u','505 unilateral 4×2 c/u','Hip thrust unilateral 4×8 c/u'],
+      rugby:     ['Sentadilla búlgara 4×8 c/u','RDL unilateral 4×8 c/u','Step up pesado 4×6 c/u','Nórdico focalizado en lado débil 4×5'],
+      basketball:['Sentadilla búlgara 4×8 c/u','Step up 4×8 c/u','RDL unilateral 4×6 c/u','Hip thrust unilateral 4×8 c/u'],
+      volleyball:['Sentadilla búlgara 4×8 c/u','Absorción monopodal 4×5 c/u','RDL unilateral 4×6 c/u'],
+      boxing:    ['Lunge unilateral 4×8 c/u','Step up 4×6 c/u','Punch con resistencia bilateral 4×6','Core antirotacional 4×10'],
+      hockey:    ['Sentadilla búlgara 4×8 c/u','RDL unilateral 4×6 c/u','Step up lateral 4×8 c/u'],
+      other:     ['Sentadilla búlgara 4×8 c/u','RDL unilateral 4×8 c/u','Step up 4×8 c/u','Hip thrust unilateral 4×6 c/u'],
+    },
+    in: {
+      football:  ['Sentadilla búlgara 2×8 c/u','RDL unilateral 2×6 c/u','Step up 2×6 c/u'],
+      rugby:     ['Sentadilla búlgara 2×6 c/u','RDL unilateral 2×6 c/u'],
+      basketball:['Sentadilla búlgara 2×6 c/u','Step up 2×6 c/u'],
+      volleyball:['Absorción monopodal 2×5 c/u','Sentadilla búlgara 2×6 c/u'],
+      boxing:    ['Lunge 2×8 c/u','Core anti-rot. 2×10'],
+      hockey:    ['Sentadilla búlgara 2×6 c/u','Step up lateral 2×6 c/u'],
+      other:     ['Sentadilla búlgara 2×6 c/u','RDL unilateral 2×6 c/u'],
+    },
+  },
+};
+
+// ── THRESHOLDS DE ALERTA ─────────────────────────────────────────
+// Una cualidad "necesita trabajo" si alguna de sus métricas está < P50
+// "crítica" si está < P25
+function evaluateQuality(qualityKey, testMetrics, sport, moment) {
+  const quality = QUALITIES[qualityKey];
+  const results = [];
+  testMetrics.forEach(m => {
+    if (!m.name || !m.value) return;
+    const norm = lookupNormByName(m.name, sport);
+    if (!norm) return;
+    const isQualityMetric = quality.metrics.some(qm => 
+      qm.toLowerCase() === m.name.toLowerCase() ||
+      m.name.toLowerCase().includes(qm.toLowerCase().slice(0,6))
+    );
+    if (!isQualityMetric) return;
+    const r = calcPct(m.value, norm.norms, norm.higher);
+    if (r) results.push({ metric: m.name, value: m.value, unit: m.unit||norm.unit, result: r });
+  });
+  if (!results.length) return null;
+  const avgRank = results.reduce((s,r) => s + r.result.rank, 0) / results.length;
+  let status, statusLabel, statusColor;
+  if (avgRank >= 75) { status='elite';    statusLabel='Destacado';    statusColor='#10B981'; }
+  else if (avgRank >= 50) { status='good'; statusLabel='En rango';    statusColor='#3B82F6'; }
+  else if (avgRank >= 25) { status='work'; statusLabel='A mejorar';   statusColor='#F59E0B'; }
+  else                   { status='crit'; statusLabel='Prioritario';  statusColor='#EF4444'; }
+  return { qualityKey, quality, results, avgRank, status, statusLabel, statusColor };
+}
+
+// ── ENGINE PRINCIPAL ──────────────────────────────────────────────
+function generatePrescription(athleteId) {
+  const db = DB.get();
+  const athlete = db.athletes.find(x => x.id === athleteId);
+  if (!athlete) return null;
+  const sport = athlete.sport || 'football';
+  const moment = athlete.moment || 'pre';
+  const momentGroup = (moment === 'in') ? 'in' : 'off'; // pre/off/post → off volume, in → in volume
+  // Get all tests for athlete, use last 2 of each type
+  const tests = (db.tests || [])
+    .filter(t => t.athleteId === athleteId)
+    .sort((a,b) => new Date(b.date) - new Date(a.date));
+  if (!tests.length) return null;
+  // Flatten all metrics (most recent wins if duplicate)
+  const allMetrics = [];
+  const seen = new Set();
+  tests.forEach(t => {
+    (t.metrics||[]).forEach(m => {
+      if (!seen.has(m.name.toLowerCase())) {
+        seen.add(m.name.toLowerCase());
+        allMetrics.push({...m, testDate: t.date, device: t.device, testType: t.testType});
+      }
+    });
+  });
+  if (!allMetrics.length) return null;
+  // Evaluate each quality
+  const evaluations = [];
+  Object.keys(QUALITIES).forEach(qk => {
+    const ev = evaluateQuality(qk, allMetrics, sport, momentGroup);
+    if (ev) evaluations.push(ev);
+  });
+  if (!evaluations.length) return null;
+  // Sort: critical first, then by rank ascending
+  evaluations.sort((a,b) => a.avgRank - b.avgRank);
+  return { athlete, sport, moment, momentGroup, evaluations, allMetrics, tests, generatedAt: new Date().toISOString() };
+}
+
+// ── RENDER PRESCRIPTION ───────────────────────────────────────────
+function renderPrescription(athleteId) {
+  const presc = generatePrescription(athleteId);
+  const container = document.getElementById('prescription-content');
+  if (!presc) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Sin datos suficientes</div><div class="empty-sub">Cargá al menos un testeo con métricas para generar recomendaciones.</div></div>`;
+    return;
+  }
+  const { athlete, sport, moment, momentGroup, evaluations } = presc;
+  const sp = SPORTS[sport] || SPORTS.other;
+  const mo = MOMENTS[moment] || MOMENTS.pre;
+  const criticals = evaluations.filter(e => e.status === 'crit');
+  const toWork    = evaluations.filter(e => e.status === 'work');
+  const onTrack   = evaluations.filter(e => e.status === 'good' || e.status === 'elite');
+  // Semaphore summary
+  const semHTML = evaluations.map(e => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--dk3);border-radius:var(--r8);border-left:3px solid ${e.statusColor}">
+      <span style="font-size:20px">${e.quality.icon}</span>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px">${e.quality.label}</div>
+        <div style="font-size:10px;color:var(--g3);margin-top:2px">${e.results.map(r=>`${r.metric}: ${r.value}${r.unit?' '+r.unit:''}`).join(' · ')}</div>
+      </div>
+      <div style="text-align:right">
+        <span class="pct ${e.status==='elite'?'pct-elite':e.status==='good'?'pct-good':e.status==='work'?'pct-below':'pct-low'}">${e.statusLabel}</span>
+        <div style="margin-top:4px;width:80px;height:5px;background:var(--dk2);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${e.avgRank}%;background:${e.statusColor};border-radius:3px"></div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  // Priority blocks with exercises
+  const priorityHTML = evaluations.filter(e => e.status==='crit'||e.status==='work').slice(0,4).map((e,i) => {
+    const exList = (EXERCISES[e.qualityKey]?.[momentGroup]?.[sport] || EXERCISES[e.qualityKey]?.[momentGroup]?.other || []);
+    const exHTML = exList.map(ex => `<li style="padding:4px 0;border-bottom:1px solid var(--bdr2);font-size:12px;color:var(--g1)">${ex}</li>`).join('');
+    const metricsHTML = e.results.map(r => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr2)">
+        <span style="font-size:11px;color:var(--g2)">${r.metric}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-family:var(--fd);font-size:16px;font-weight:800">${r.value} <span style="font-size:10px;color:var(--g3)">${r.unit||''}</span></span>
+          <span class="pct ${r.result.cls}">${r.result.label}</span>
+        </div>
+      </div>`).join('');
+    return `
+    <div class="card" style="border-top:3px solid ${e.statusColor};margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="width:28px;height:28px;border-radius:50%;background:${e.statusColor};display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:14px;font-weight:900;color:#fff;flex-shrink:0">${i+1}</div>
+        <div>
+          <div style="font-family:var(--fd);font-size:18px;font-weight:800;text-transform:uppercase">${e.quality.icon} ${e.quality.label}</div>
+          <span class="pct ${e.status==='crit'?'pct-low':'pct-below'}" style="margin-top:3px">${e.statusLabel} — P${Math.round(e.avgRank)} promedio</span>
+        </div>
+      </div>
+      <div class="g2">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Métricas detectadas</div>
+          ${metricsHTML}
+          <div style="margin-top:10px;padding:10px 12px;background:var(--dk3);border-radius:var(--r8);border-left:2px solid ${e.statusColor}">
+            <div style="font-size:11px;color:var(--g1);line-height:1.6">${e.quality.desc_coach}</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">${sp.icon} ${sp.label} · ${mo.label} — Ejercicios recomendados</div>
+          <ul style="list-style:none;padding:0">${exHTML||'<li style="color:var(--g3);font-size:12px">Ver progresión general de la cualidad</li>'}</ul>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Athlete-facing version
+  const athleteHTML = evaluations.filter(e=>e.status==='crit'||e.status==='work').slice(0,3).map((e,i) => {
+    const exList = (EXERCISES[e.qualityKey]?.[momentGroup]?.[sport] || EXERCISES[e.qualityKey]?.[momentGroup]?.other || []).slice(0,3);
+    return `
+    <div style="padding:14px 16px;background:var(--dk3);border-radius:var(--r8);border-left:3px solid ${e.statusColor};margin-bottom:10px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:4px">${e.quality.icon} ${e.quality.label}</div>
+      <div style="font-size:12px;color:var(--g2);line-height:1.65;margin-bottom:8px">${e.quality.desc_atleta}</div>
+      ${exList.length?`<div style="font-size:10px;color:var(--g3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">Vas a trabajar</div>
+      <ul style="list-style:disc;padding-left:16px">${exList.map(ex=>`<li style="font-size:12px;color:var(--g1);padding:2px 0">${ex}</li>`).join('')}</ul>`:''}
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <!-- Toggle coach/athlete -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:12px;color:var(--g3);margin-bottom:2px">Análisis basado en ${presc.allMetrics.length} métricas · ${presc.tests.length} testeos</div>
+        <div style="font-size:11px;color:var(--g3)">Deporte: ${sp.icon} ${sp.label} · Momento: <span style="color:${mo.color}">${mo.label}</span> · Norma: ${momentGroup==='in'?'En Temporada':'Off Season'}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div class="toggle">
+          <div class="toggle-opt active" id="tog-coach" onclick="switchPrescView('coach')">🔬 Coach</div>
+          <div class="toggle-opt" id="tog-atleta" onclick="switchPrescView('atleta')">👤 Atleta</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="printPrescription('${athleteId}')">🖨 PDF</button>
+      </div>
+    </div>
+
+    <!-- COACH VIEW -->
+    <div id="presc-coach-view">
+      <!-- Semáforo -->
+      <div class="sec-hd" style="margin-bottom:10px"><div class="sec-title">Semáforo de <span class="ac">Cualidades</span></div></div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:24px">${semHTML}</div>
+
+      <!-- Resumen rápido -->
+      ${criticals.length?`<div class="alert" style="background:rgba(239,68,68,.08);border-color:var(--re);border-left:4px solid var(--re);margin-bottom:16px">
+        <strong style="color:var(--re)">⚠️ Cualidades prioritarias:</strong> ${criticals.map(e=>`${e.quality.icon} ${e.quality.label}`).join(', ')}. Requieren atención inmediata en el bloque actual.
+      </div>`:''}
+      ${onTrack.length?`<div class="alert alert-info" style="margin-bottom:16px">
+        <strong>✅ En rango o destacado:</strong> ${onTrack.map(e=>`${e.quality.icon} ${e.quality.label}`).join(', ')}. Mantener con volumen de retención.
+      </div>`:''}
+
+      <!-- Prioridades con ejercicios -->
+      <div class="sec-hd" style="margin-bottom:10px"><div class="sec-title">Foco de <span class="ac">Entrenamiento</span></div></div>
+      ${priorityHTML || '<div style="color:var(--g3);text-align:center;padding:24px">¡Todas las cualidades están en rango o destacadas! Mantené el trabajo actual.</div>'}
+    </div>
+
+    <!-- ATHLETE VIEW -->
+    <div id="presc-atleta-view" style="display:none">
+      <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,var(--card),rgba(255,107,26,.06));border-color:rgba(255,107,26,.25)">
+        <div style="font-family:var(--fd);font-size:24px;font-weight:900;text-transform:uppercase;margin-bottom:6px">Tu Plan de <span style="color:var(--o)">Trabajo</span></div>
+        <div style="font-size:13px;color:var(--g2);line-height:1.7">
+          Basado en tus últimos testeos, estos son los tres focos principales de tu entrenamiento. Trabajar estas cualidades es lo que más va a impactar en tu rendimiento.
+        </div>
+      </div>
+      ${athleteHTML || '<div style="color:var(--g3);text-align:center;padding:24px">¡Estás en buen nivel en todas las cualidades evaluadas!</div>'}
+      <div style="margin-top:16px;padding:14px 16px;background:var(--dk3);border-radius:var(--r8);font-size:12px;color:var(--g3);line-height:1.7">
+        <strong style="color:var(--g2)">Sobre tu evaluación:</strong> Los resultados se comparan con datos normativos de jugadores de élite (${sp.label}). El objetivo es que identifiques en qué área tenés mayor margen de mejora para enfocar el entrenamiento con tu coach.
+      </div>
+    </div>`;
+}
+
+function switchPrescView(v) {
+  document.getElementById('presc-coach-view').style.display = v==='coach'?'block':'none';
+  document.getElementById('presc-atleta-view').style.display = v==='atleta'?'block':'none';
+  document.getElementById('tog-coach').classList.toggle('active', v==='coach');
+  document.getElementById('tog-atleta').classList.toggle('active', v==='atleta');
+}
+
+// ── PDF PRESCRIPCIÓN ─────────────────────────────────────────────
+function printPrescription(athleteId) {
+  const presc = generatePrescription(athleteId);
+  if (!presc) return;
+  const { athlete, sport, moment, momentGroup, evaluations } = presc;
+  const sp = SPORTS[sport]||SPORTS.other;
+  const mo = MOMENTS[moment]||MOMENTS.pre;
+  const db = DB.get();
+  const s = db.settings||{};
+  const rows = evaluations.filter(e=>e.status==='crit'||e.status==='work').slice(0,4).map((e,i) => {
+    const exList = (EXERCISES[e.qualityKey]?.[momentGroup]?.[sport] || EXERCISES[e.qualityKey]?.[momentGroup]?.other || []);
+    return `<tr style="vertical-align:top">
+      <td style="padding:10px;border-bottom:1px solid #eee;font-weight:700">${i+1}. ${e.quality.icon} ${e.quality.label}</td>
+      <td style="padding:10px;border-bottom:1px solid #eee"><span style="background:#f5f5f5;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;color:${e.statusColor}">${e.statusLabel}</span></td>
+      <td style="padding:10px;border-bottom:1px solid #eee;font-size:11px;color:#444">${e.results.map(r=>`${r.metric}: <b>${r.value} ${r.unit||''}</b> (${r.result.label})`).join('<br>')}</td>
+      <td style="padding:10px;border-bottom:1px solid #eee;font-size:11px">${exList.slice(0,4).map(ex=>`• ${ex}`).join('<br>')}</td>
+    </tr>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>VBP Prescripción</title>
+  <style>body{font-family:Inter,Arial,sans-serif;color:#111;margin:0;padding:0}
+  .header{background:#0A0C0F;color:#fff;padding:22px 32px;display:flex;justify-content:space-between;align-items:center}
+  .logo{font-size:26px;font-weight:900;color:#FF6B1A}
+  .body{padding:28px 32px}
+  table{width:100%;border-collapse:collapse}
+  th{background:#f5f5f5;padding:9px 10px;text-align:left;font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px}
+  @media print{@page{margin:15mm}}</style></head><body>
+  <div class="header">
+    <div><div class="logo">VBP</div><div style="font-size:11px;color:#888">${s.org||'VBP Athletic Performance'} · ${s.coachName||'Coach'}</div></div>
+    <div style="text-align:right;font-size:11px;color:#888">Prescripción de Entrenamiento<br>${new Date().toLocaleDateString('es',{day:'2-digit',month:'long',year:'numeric'})}</div>
+  </div>
+  <div class="body">
+    <div style="border:2px solid #FF6B1A;border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:26px;font-weight:900;text-transform:uppercase">${athlete.firstName} <span style="color:#FF6B1A">${athlete.lastName}</span></div>
+        <div style="font-size:12px;color:#666;margin-top:4px">${sp.icon} ${sp.label} ${athlete.position?'· '+athlete.position:''} ${athlete.club?'· '+athlete.club:''}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;color:#888">Momento</div>
+        <div style="font-size:16px;font-weight:800;color:${mo.color}">${mo.label}</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">Norma: ${momentGroup==='in'?'En Temporada':'Off Season'}</div>
+      </div>
+    </div>
+    <h3 style="font-size:14px;color:#FF6B1A;margin-bottom:12px">FOCO DE ENTRENAMIENTO — PRIORIDADES</h3>
+    <table><thead><tr><th>Cualidad</th><th>Estado</th><th>Métricas</th><th>Ejercicios recomendados</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="4" style="text-align:center;padding:20px;color:#888">Todas las cualidades en rango o destacadas.</td></tr>'}</tbody></table>
+    <div style="margin-top:20px;padding:12px 16px;background:#f9f9f9;border-radius:8px;font-size:11px;color:#888;border-left:3px solid #FF6B1A">
+      Referencia normativa: VALD EPL 2025/26 · Literatura científica por deporte. Prescripción generada por VBP Athletes Performance.
+    </div>
+  </div></body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+</script>
