@@ -391,7 +391,10 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 
     <!-- ══ NEW TEST ══════════════════════════════════════════ -->
     <div class="panel" id="panel-new-test">
-      <div class="sec-hd"><div class="sec-title">Nuevo <span class="ac">Testeo</span></div></div>
+      <div class="sec-hd">
+        <div class="sec-title">Nuevo <span class="ac">Testeo</span></div>
+        <button class="btn btn-ghost btn-sm" onclick="openCsvImportModal()">📥 Importar CSV de VALD</button>
+      </div>
 
       <!-- Step 1: Who + When -->
       <div class="card" style="margin-bottom:16px">
@@ -661,6 +664,100 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
   <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr2)">
     <button class="btn btn-ghost" onclick="closeAthleteModal()">Cancelar</button>
     <button class="btn btn-primary" onclick="saveAthlete()">💾 Guardar Atleta</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ CSV IMPORT MODAL ════════════════════════════════════════ -->
+<div class="modal-overlay" id="csv-import-modal" style="display:none" onclick="closeCsvImportModal(event)">
+<div class="modal" style="max-width:920px" onclick="event.stopPropagation()">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title">📥 Importar CSV de VALD</div>
+      <div style="font-size:12px;color:var(--g3);margin-top:2px">ForceDecks · ForceFrame · NordBord · SmartSpeed — Results Export</div>
+    </div>
+    <div class="modal-close" onclick="closeCsvImportModal()">✕</div>
+  </div>
+  <div id="csv-import-body">
+    <!-- STEP 1: Upload -->
+    <div id="csv-step-upload">
+      <div class="alert alert-info" style="margin-bottom:18px">
+        Exportá el CSV desde <strong>VALD Hub → Dashboard → Results Export</strong>, eligiendo la pestaña del dispositivo correspondiente (ForceDecks, ForceFrame, NordBord o SmartSpeed). Subilo acá abajo.
+      </div>
+      <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 20px;border:2px dashed var(--bdr);border-radius:12px;cursor:pointer;transition:border-color .15s" 
+             id="csv-dropzone"
+             onmouseover="this.style.borderColor='var(--o)'" onmouseout="this.style.borderColor='var(--bdr)'">
+        <span style="font-size:36px">📄</span>
+        <span style="font-size:13px;color:var(--g2);font-weight:600">Hacé clic para elegir el archivo CSV</span>
+        <span style="font-size:11px;color:var(--g3)">o arrastralo acá</span>
+        <input type="file" accept=".csv" style="display:none" id="csv-file-input" onchange="handleCsvFile(this)">
+      </label>
+    </div>
+
+    <!-- STEP 2: Column mapping -->
+    <div id="csv-step-mapping" style="display:none">
+      <div class="alert alert-info" style="margin-bottom:16px">
+        Detectamos <strong id="csv-row-count">0</strong> filas. Confirmá qué columna corresponde a cada dato. Las columnas detectadas automáticamente ya vienen seleccionadas.
+      </div>
+      <div class="g2" style="margin-bottom:16px">
+        <div class="form-group">
+          <label class="form-label">Dispositivo</label>
+          <select class="form-input form-select" id="csv-map-device" onchange="updateCsvDeviceTests()">
+            <option value="forcedecks">📊 ForceDecks</option>
+            <option value="forceframe">💪 ForceFrame</option>
+            <option value="smartspeed">⚡ SmartSpeed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de Test (si el CSV no lo especifica por fila)</label>
+          <select class="form-input form-select" id="csv-map-testtype"></select>
+        </div>
+      </div>
+      <div class="g2" style="margin-bottom:16px">
+        <div class="form-group">
+          <label class="form-label">Columna — Nombre del Atleta</label>
+          <select class="form-input form-select" id="csv-map-name"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Columna — Fecha del Test</label>
+          <select class="form-input form-select" id="csv-map-date"></select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label">Columna — Tipo de Test (opcional, si el CSV tiene una columna "Test Type")</label>
+        <select class="form-input form-select" id="csv-map-testtype-col">
+          <option value="">— No aplica, usar el tipo seleccionado arriba —</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:8px">
+        <label class="form-label">Columnas de Métricas (tildá las que querés importar)</label>
+      </div>
+      <div id="csv-metric-columns" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;max-height:220px;overflow-y:auto;padding:12px;background:var(--dk3);border-radius:8px;margin-bottom:16px"></div>
+      <div style="display:flex;justify-content:space-between;gap:8px">
+        <button class="btn btn-ghost" onclick="csvBackToUpload()">← Volver</button>
+        <button class="btn btn-primary" onclick="processCsvMapping()">Continuar → Revisar Atletas</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Athlete matching + preview -->
+    <div id="csv-step-preview" style="display:none">
+      <div class="alert alert-info" style="margin-bottom:16px">
+        Encontramos <strong id="csv-athlete-count">0</strong> atletas en el archivo. Confirmá con qué atleta de tu base corresponde cada nombre (o creá uno nuevo).
+      </div>
+      <div id="csv-athlete-matches" style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;margin-bottom:16px"></div>
+      <div style="display:flex;justify-content:space-between;gap:8px">
+        <button class="btn btn-ghost" onclick="csvBackToMapping()">← Volver</button>
+        <button class="btn btn-primary" onclick="confirmCsvImport()" id="csv-confirm-btn">✓ Importar Testeos</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Result -->
+    <div id="csv-step-done" style="display:none;text-align:center;padding:30px 0">
+      <div style="font-size:48px;margin-bottom:14px">✅</div>
+      <div style="font-family:var(--fd);font-size:22px;font-weight:800;margin-bottom:8px">Importación completa</div>
+      <div id="csv-done-summary" style="font-size:13px;color:var(--g2);margin-bottom:20px"></div>
+      <button class="btn btn-primary" onclick="closeCsvImportModal();nav('history')">Ver Historial</button>
+    </div>
   </div>
 </div>
 </div>
@@ -3027,6 +3124,380 @@ function loadPrescription(athleteId) {
   renderPrescription(athleteId);
 }
 
+
+// ════════════════════════════════════════════════════════════════
+// VBP — CSV IMPORT FROM VALD HUB
+// ════════════════════════════════════════════════════════════════
+
+var csvImportState = {
+  rawRows: [],      // array of objects {col: val}
+  headers: [],      // array of column names
+  device: 'forcedecks',
+  testType: '',
+  nameCol: '',
+  dateCol: '',
+  testTypeCol: '',
+  metricCols: [],   // selected metric columns
+  athletes: [],     // unique names found in csv -> {name, matchedId, action}
+  rowsByAthlete: {} // name -> array of rows
+};
+
+// ── CSV Parser (handles quoted fields, commas inside quotes) ────
+function parseCsvText(text) {
+  var rows = [];
+  var i = 0, len = text.length;
+  var row = [], field = '', inQuotes = false;
+  // Normalize line endings
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  len = text.length;
+  while (i < len) {
+    var ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i+1] === '"') { field += '"'; i += 2; continue; }
+        inQuotes = false; i++; continue;
+      } else { field += ch; i++; continue; }
+    } else {
+      if (ch === '"') { inQuotes = true; i++; continue; }
+      if (ch === ',') { row.push(field); field=''; i++; continue; }
+      if (ch === '\n') { row.push(field); rows.push(row); row=[]; field=''; i++; continue; }
+      field += ch; i++; continue;
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(function(r){ return r.length > 1 || (r.length===1 && r[0].trim()!==''); });
+}
+
+function detectColumn(headers, candidates) {
+  var lowerHeaders = headers.map(function(h){ return h.toLowerCase().trim(); });
+  for (var c = 0; c < candidates.length; c++) {
+    var idx = lowerHeaders.indexOf(candidates[c]);
+    if (idx >= 0) return headers[idx];
+  }
+  // Fuzzy contains match
+  for (var c2 = 0; c2 < candidates.length; c2++) {
+    for (var h = 0; h < lowerHeaders.length; h++) {
+      if (lowerHeaders[h].indexOf(candidates[c2]) >= 0) return headers[h];
+    }
+  }
+  return '';
+}
+
+function openCsvImportModal() {
+  csvImportState = { rawRows:[], headers:[], device:'forcedecks', testType:'', nameCol:'', dateCol:'', testTypeCol:'', metricCols:[], athletes:[], rowsByAthlete:{} };
+  document.getElementById('csv-step-upload').style.display = 'block';
+  document.getElementById('csv-step-mapping').style.display = 'none';
+  document.getElementById('csv-step-preview').style.display = 'none';
+  document.getElementById('csv-step-done').style.display = 'none';
+  document.getElementById('csv-file-input').value = '';
+  document.getElementById('csv-import-modal').style.display = 'flex';
+}
+function closeCsvImportModal(e) {
+  if (e && e.target !== document.getElementById('csv-import-modal')) return;
+  document.getElementById('csv-import-modal').style.display = 'none';
+}
+function csvBackToUpload() {
+  document.getElementById('csv-step-mapping').style.display = 'none';
+  document.getElementById('csv-step-upload').style.display = 'block';
+}
+function csvBackToMapping() {
+  document.getElementById('csv-step-preview').style.display = 'none';
+  document.getElementById('csv-step-mapping').style.display = 'block';
+}
+
+function handleCsvFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var text = e.target.result;
+      var rows = parseCsvText(text);
+      if (rows.length < 2) { alert('El archivo CSV no tiene datos suficientes.'); return; }
+      var headers = rows[0].map(function(h){ return h.trim(); });
+      var dataRows = rows.slice(1).map(function(r) {
+        var obj = {};
+        headers.forEach(function(h, idx) { obj[h] = (r[idx]!==undefined ? r[idx].trim() : ''); });
+        return obj;
+      }).filter(function(o) {
+        // Skip fully empty rows
+        return Object.values(o).some(function(v){ return v !== ''; });
+      });
+      csvImportState.headers = headers;
+      csvImportState.rawRows = dataRows;
+      showCsvMappingStep();
+    } catch (err) {
+      alert('Error al leer el CSV: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function showCsvMappingStep() {
+  document.getElementById('csv-step-upload').style.display = 'none';
+  document.getElementById('csv-step-mapping').style.display = 'block';
+  document.getElementById('csv-row-count').textContent = csvImportState.rawRows.length;
+
+  var headers = csvImportState.headers;
+
+  // Auto-detect name column
+  var nameCol = detectColumn(headers, ['athlete name','name','profile name','client name','full name','athlete']);
+  var dateCol = detectColumn(headers, ['test date','date','session date','recorded date']);
+  var testTypeColGuess = detectColumn(headers, ['test type','testtype','type']);
+
+  // Populate name/date selects
+  var nameSel = document.getElementById('csv-map-name');
+  var dateSel = document.getElementById('csv-map-date');
+  var ttColSel = document.getElementById('csv-map-testtype-col');
+  nameSel.innerHTML = headers.map(function(h){ return '<option value="'+h+'"'+(h===nameCol?' selected':'')+'>'+h+'</option>'; }).join('');
+  dateSel.innerHTML = headers.map(function(h){ return '<option value="'+h+'"'+(h===dateCol?' selected':'')+'>'+h+'</option>'; }).join('');
+  ttColSel.innerHTML = '<option value="">— No aplica, usar el tipo seleccionado arriba —</option>' +
+    headers.map(function(h){ return '<option value="'+h+'"'+(h===testTypeColGuess?' selected':'')+'>'+h+'</option>'; }).join('');
+
+  updateCsvDeviceTests();
+
+  // Metric columns: everything except name/date/testtype columns, numeric-looking
+  var excludeCols = [nameCol, dateCol, testTypeColGuess].filter(Boolean);
+  var metricCandidates = headers.filter(function(h){ return excludeCols.indexOf(h) === -1; });
+
+  var metricsContainer = document.getElementById('csv-metric-columns');
+  metricsContainer.innerHTML = metricCandidates.map(function(h, idx) {
+    var checkboxId = 'csvm_' + idx;
+    return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--g2);cursor:pointer">' +
+      '<input type="checkbox" id="'+checkboxId+'" value="'+h.replace(/"/g,'&quot;')+'" checked style="accent-color:var(--o)">' +
+      '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h+'</span>' +
+      '</label>';
+  }).join('');
+}
+
+function updateCsvDeviceTests() {
+  var device = document.getElementById('csv-map-device').value;
+  csvImportState.device = device;
+  var devCfg = DEVICES[device];
+  var sel = document.getElementById('csv-map-testtype');
+  sel.innerHTML = Object.entries(devCfg.tests).map(function(entry) {
+    return '<option value="'+entry[0]+'">'+entry[1].icon+' '+entry[1].label+'</option>';
+  }).join('');
+}
+
+function processCsvMapping() {
+  var nameCol = document.getElementById('csv-map-name').value;
+  var dateCol = document.getElementById('csv-map-date').value;
+  var testTypeCol = document.getElementById('csv-map-testtype-col').value;
+  var defaultTestType = document.getElementById('csv-map-testtype').value;
+  var device = document.getElementById('csv-map-device').value;
+
+  var checkedMetrics = Array.prototype.slice.call(document.querySelectorAll('#csv-metric-columns input:checked')).map(function(el){ return el.value; });
+  if (!checkedMetrics.length) { alert('Seleccioná al menos una columna de métrica'); return; }
+  if (!nameCol || !dateCol) { alert('Seleccioná las columnas de nombre y fecha'); return; }
+
+  csvImportState.nameCol = nameCol;
+  csvImportState.dateCol = dateCol;
+  csvImportState.testTypeCol = testTypeCol;
+  csvImportState.testType = defaultTestType;
+  csvImportState.device = device;
+  csvImportState.metricCols = checkedMetrics;
+
+  // Group rows by athlete name
+  var byAthlete = {};
+  csvImportState.rawRows.forEach(function(row) {
+    var name = (row[nameCol] || '').trim();
+    if (!name) return;
+    if (!byAthlete[name]) byAthlete[name] = [];
+    byAthlete[name].push(row);
+  });
+  csvImportState.rowsByAthlete = byAthlete;
+
+  var uniqueNames = Object.keys(byAthlete);
+  if (!uniqueNames.length) { alert('No se encontraron nombres de atletas válidos en la columna seleccionada.'); return; }
+
+  showCsvPreviewStep(uniqueNames);
+}
+
+function showCsvPreviewStep(uniqueNames) {
+  document.getElementById('csv-step-mapping').style.display = 'none';
+  document.getElementById('csv-step-preview').style.display = 'block';
+  document.getElementById('csv-athlete-count').textContent = uniqueNames.length;
+
+  var db = DB.get();
+  var existingAthletes = db.athletes || [];
+
+  function bestMatch(name) {
+    var nameLower = name.toLowerCase().trim();
+    var nameParts = nameLower.split(/\s+/);
+    var best = null, bestScore = 0;
+    existingAthletes.forEach(function(a) {
+      var full = (a.firstName + ' ' + a.lastName).toLowerCase();
+      var fullRev = (a.lastName + ' ' + a.firstName).toLowerCase();
+      var score = 0;
+      if (full === nameLower || fullRev === nameLower) score = 100;
+      else {
+        var aParts = (a.firstName+' '+a.lastName).toLowerCase().split(/\s+/);
+        nameParts.forEach(function(p) { if (aParts.indexOf(p) >= 0) score += 30; });
+      }
+      if (score > bestScore) { bestScore = score; best = a; }
+    });
+    return bestScore >= 30 ? best : null;
+  }
+
+  var container = document.getElementById('csv-athlete-matches');
+  container.innerHTML = uniqueNames.map(function(name, idx) {
+    var match = bestMatch(name);
+    var rowCount = csvImportState.rowsByAthlete[name].length;
+    var selectId = 'csv-athlete-select-' + idx;
+    var options = '<option value="__new__">+ Crear atleta nuevo: "'+name+'"</option><option value="__skip__">⏭ Omitir (no importar)</option>' +
+      existingAthletes.map(function(a) {
+        var sp = SPORTS[a.sport]||SPORTS.other;
+        return '<option value="'+a.id+'">'+sp.icon+' '+a.firstName+' '+a.lastName+'</option>';
+      }).join('');
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--dk3);border-radius:8px" data-csv-name="'+name.replace(/"/g,'&quot;')+'">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-weight:700;font-size:13px;color:var(--w)">'+name+'</div>' +
+        '<div style="font-size:11px;color:var(--g3)">'+rowCount+' fila(s) en el CSV'+(match?' · Match sugerido: '+match.firstName+' '+match.lastName:' · Sin match automático')+'</div>' +
+      '</div>' +
+      '<select class="form-input form-select" id="'+selectId+'" style="width:260px;flex-shrink:0">' + options + '</select>' +
+      '</div>';
+  }).join('');
+
+  // Pre-select best matches
+  uniqueNames.forEach(function(name, idx) {
+    var match = bestMatch(name);
+    if (match) {
+      var sel = document.getElementById('csv-athlete-select-' + idx);
+      if (sel) sel.value = match.id;
+    }
+  });
+
+  csvImportState._uniqueNames = uniqueNames;
+}
+
+async function confirmCsvImport() {
+  var btn = document.getElementById('csv-confirm-btn');
+  btn.textContent = 'Importando…'; btn.disabled = true;
+
+  var uniqueNames = csvImportState._uniqueNames;
+  var db = DB.get();
+  var totalTestsCreated = 0;
+  var totalAthletesCreated = 0;
+  var skipped = 0;
+
+  for (var i = 0; i < uniqueNames.length; i++) {
+    var name = uniqueNames[i];
+    var sel = document.getElementById('csv-athlete-select-' + i);
+    var choice = sel.value;
+    if (choice === '__skip__') { skipped++; continue; }
+
+    var athleteId = choice;
+    if (choice === '__new__') {
+      // Split name into first/last (best effort)
+      var parts = name.trim().split(/\s+/);
+      var firstName = parts[0] || name;
+      var lastName = parts.slice(1).join(' ') || '—';
+      var newAthleteData = {
+        firstName: firstName, lastName: lastName,
+        sport: 'football', moment: 'pre'
+      };
+      var saved = await dbSaveAthlete(newAthleteData, null);
+      if (!saved) continue;
+      db.athletes.push(saved);
+      athleteId = saved.id;
+      totalAthletesCreated++;
+    }
+
+    var athlete = db.athletes.find(function(a){ return a.id === athleteId; });
+    var rows = csvImportState.rowsByAthlete[name];
+
+    for (var r = 0; r < rows.length; r++) {
+      var row = rows[r];
+      var dateRaw = row[csvImportState.dateCol] || '';
+      var dateParsed = parseCsvDate(dateRaw);
+      if (!dateParsed) continue;
+
+      var testType = csvImportState.testTypeCol ? mapCsvTestType(row[csvImportState.testTypeCol]) : csvImportState.testType;
+
+      var metrics = [];
+      csvImportState.metricCols.forEach(function(col) {
+        var val = row[col];
+        if (val === undefined || val === '' || isNaN(parseFloat(val))) return;
+        metrics.push({ name: col, value: val, unit: '' });
+      });
+      if (!metrics.length) continue;
+
+      var testData = {
+        athleteId: athleteId,
+        sport: athlete ? athlete.sport : 'other',
+        device: csvImportState.device,
+        testType: testType || 'CUSTOM',
+        date: dateParsed,
+        moment: athlete ? athlete.moment : 'pre',
+        nextDate: null,
+        notes: 'Importado desde CSV de VALD Hub',
+        metrics: metrics,
+        sessionGroup: dateParsed + '_' + athleteId
+      };
+      var savedTest = await dbSaveTest(testData);
+      if (savedTest) { db.tests.push(savedTest); totalTestsCreated++; }
+    }
+  }
+
+  btn.textContent = '✓ Importar Testeos'; btn.disabled = false;
+
+  document.getElementById('csv-step-preview').style.display = 'none';
+  document.getElementById('csv-step-done').style.display = 'block';
+  document.getElementById('csv-done-summary').innerHTML =
+    '<strong style="color:var(--o)">' + totalTestsCreated + '</strong> testeos importados' +
+    (totalAthletesCreated ? ' · <strong style="color:var(--o)">' + totalAthletesCreated + '</strong> atletas nuevos creados' : '') +
+    (skipped ? ' · ' + skipped + ' omitidos' : '');
+}
+
+function parseCsvDate(raw) {
+  if (!raw) return null;
+  raw = raw.trim();
+  // Try YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0,10);
+  // Try DD/MM/YYYY or MM/DD/YYYY
+  var m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) {
+    var a = parseInt(m[1],10), b = parseInt(m[2],10), y = m[3];
+    // Assume DD/MM/YYYY (VALD typically AU format) if first part > 12
+    var day, month;
+    if (a > 12) { day = a; month = b; } else { day = a; month = b; } // default DD/MM
+    return y + '-' + String(month).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+  }
+  // Try parsing with Date object as fallback
+  var d = new Date(raw);
+  if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+  return null;
+}
+
+function mapCsvTestType(rawType) {
+  if (!rawType) return csvImportState.testType;
+  var t = rawType.toLowerCase();
+  var map = {
+    'countermovement jump':'CMJ', 'cmj':'CMJ',
+    'countermovement rebound jump':'CMJ_REBOUND', 'cmrj':'CMJ_REBOUND',
+    'squat jump':'SJ', 'sj':'SJ',
+    'drop jump':'DJ', 'dj':'DJ',
+    'single leg drop jump':'SLDJ', 'sldj':'SLDJ',
+    'hop test':'HOP', 'hop':'HOP',
+    'single leg jump':'SLJ', 'slj':'SLJ',
+    'isometric mid-thigh pull':'IMTP', 'imtp':'IMTP',
+    'isometric squat':'ISO_SQUAT',
+    'hip abduction':'HIP_ABDADD', 'hip adduction':'HIP_ABDADD', 'hip abd':'HIP_ABDADD',
+    'knee flexion':'KNEE_FLEXEXT', 'knee extension':'KNEE_FLEXEXT',
+    'ankle':'ANKLE_FF',
+    'neck':'NECK',
+    'shoulder':'SHOULDER',
+    'sprint':'SPRINT',
+    '505':'COD', 't-test':'COD', 'illinois':'COD',
+  };
+  for (var key in map) {
+    if (t.indexOf(key) >= 0) return map[key];
+  }
+  return csvImportState.testType || 'CUSTOM';
+}
+
+
 // ══ INIT ════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function() {
   checkSession();
@@ -3628,3 +4099,4 @@ function printPrescription(athleteId) {
   setTimeout(()=>w.print(),500);
 }
 </script>
+
