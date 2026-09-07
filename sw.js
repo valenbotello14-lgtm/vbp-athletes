@@ -1,5 +1,5 @@
 // Service worker: habilita la instalación como app y el uso sin conexión.
-const CACHE_NAME = "vbp-athletes-v1";
+const CACHE_NAME = "vbp-athletes-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
